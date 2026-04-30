@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Bewegung anlegen</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Neue Bewegung</h1>
+
+<form id="bewegung-form">
+    <label>Typ:</label>
+    <select name="typ">
+        <option value="Zugang">Zugang</option>
+        <option value="Abgang">Abgang</option>
+    </select>
+
+    <label>Menge:</label>
+    <input type="number" name="menge" required>
+
+    <label>Lagerort:</label>
+    <select name="lagerort_id" id="lagerort-select"></select>
+
+    <button type="submit">Speichern</button>
+</form>
+
+<script src="script.js"></script>
+<script>
+    loadLagerorteDropdown();
+    initBewegungForm();
+</script>
+
+</body>
+</html>
