@@ -1,3 +1,5 @@
+
+//Author: Selina Steuer
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -14,10 +16,33 @@
             <th>Bezeichnung</th>
             <th>Halle</th>
             <th>Kapazität</th>
+            <th>Aktionen</th>
         </tr>
     </thead>
     <tbody></tbody>
 </table>
+
+<button onclick="showCreateForm()">Neuen Lagerort anlegen</button>
+
+<div id="lagerort-form-container" style="display:none;">
+    <h3 id="form-title">Lagerort anlegen</h3>
+
+    <form id="lagerort-form">
+        <input type="hidden" name="id">
+
+        <label>Bezeichnung:</label>
+        <input type="text" name="bezeichnung" required>
+
+        <label>Halle:</label>
+        <input type="text" name="halle" required>
+
+        <label>Kapazität:</label>
+        <input type="number" name="kapazität" required>
+
+        <button type="submit">Speichern</button>
+        <button type="button" onclick="hideForm()">Abbrechen</button>
+    </form>
+</div>
 
 <script src="script.js"></script>
 <script>

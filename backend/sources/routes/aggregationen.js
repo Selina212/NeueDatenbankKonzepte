@@ -1,3 +1,4 @@
+//Author: Selina Steuer
 console.log("Aggregationen geladen!");
 
 import { Router } from "express";
@@ -53,12 +54,14 @@ router.get("/typ-anzahl", async (req, res) => {
   }
 });
 
-/* ============================================================
-   3) Bewegungen pro Lagerort (JOIN)
-   ============================================================ */
 router.get("/pro-lagerort", async (req, res) => {
   try {
     const result = await bewegungen.aggregate([
+      {
+        $addFields: {
+          lagerort_id: { $toObjectId: "$lagerort_id" }
+        }
+      },
       {
         $lookup: {
           from: "lagerorte",
@@ -82,6 +85,63 @@ router.get("/pro-lagerort", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+/* ============================================================
+   4) Gesamtwert des Lagers
+   ============================================================ */
+router.get("/lagerwert", async (req, res) => {
+  try {
+    const result = await produkte.aggregate([
+      {
+        $project: {
+          wert: { $multiply: ["$bestand", "$preis"] }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          gesamtwert: { $sum: "$wert" }
+        }
+      }
+    ]).toArray();
+
+    res.json(result[0] || { gesamtwert: 0 });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+router.get("/produkte-pro-kategorie", async (req, res) => {
+  try {
+    const result = await produkte.aggregate([
+      {
+        $addFields: {
+          kategorie_id: { $toObjectId: "$kategorie_id" }
+        }
+      },
+      {
+        $lookup: {
+          from: "kategorien",
+          localField: "kategorie_id",
+          foreignField: "_id",
+          as: "kategorie"
+        }
+      },
+      { $unwind: "$kategorie" },
+      {
+        $group: {
+          _id: "$kategorie.name",
+          anzahl: { $sum: 1 }
+        }
+      },
+      { $sort: { anzahl: -1 } }
+    ]).toArray();
+
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 
 export default router;
