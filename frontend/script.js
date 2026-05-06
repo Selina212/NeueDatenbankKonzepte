@@ -178,6 +178,7 @@ async function loadDashboard() {
     loadLagerwert();
     loadProdukteProKategorie();
     loadBewegungenProLagerort();
+        loadBewegungenProTag();
 }
 async function loadLagerwert() {
     const res = await fetch(`${API_BASE}/aggregationen/lagerwert`);
@@ -193,34 +194,77 @@ async function loadProdukteProKategorie() {
     const res = await fetch(`${API_BASE}/aggregationen/produkte-pro-kategorie`);
     const data = await res.json();
 
-    const tbody = document.querySelector("#kategorien-table tbody");
-    tbody.innerHTML = "";
+    const labels = data.map(d => d._id);
+    const values = data.map(d => d.anzahl);
 
-    data.forEach(k => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${k._id}</td>
-                <td>${k.anzahl}</td>
-            </tr>
-        `;
+    new Chart(document.getElementById("chartProdukteProKategorie"), {
+        type: "pie",
+        data: {
+            labels,
+            datasets: [{
+                data: values,
+                backgroundColor: ["#4e79a7", "#f28e2b", "#e15759", "#76b7b2", "#59a14f"]
+            }]
+        },
+        options: {
+    responsive: false,
+    maintainAspectRatio: false
+}
+
     });
 }
+
 async function loadBewegungenProLagerort() {
     const res = await fetch(`${API_BASE}/aggregationen/pro-lagerort`);
     const data = await res.json();
 
-    const tbody = document.querySelector("#lagerort-table tbody");
-    tbody.innerHTML = "";
+    const labels = data.map(d => d._id);
+    const values = data.map(d => d.anzahl);
 
-    data.forEach(l => {
-        tbody.innerHTML += `
-            <tr>
-                <td>${l._id}</td>
-                <td>${l.anzahl}</td>
-            </tr>
-        `;
+    new Chart(document.getElementById("chartBewegungenProLagerort"), {
+        type: "bar",
+        data: {
+            labels,
+            datasets: [{
+                label: "Bewegungen",
+                data: values,
+                backgroundColor: "#4e79a7"
+            }]
+        },
+        options: {
+    responsive: false,
+    maintainAspectRatio: false
+}
+
     });
 }
+ 
+async function loadBewegungenProTag() {
+    const res = await fetch(`${API_BASE}/aggregationen/pro-tag`);
+    const data = await res.json();
+
+    const labels = data.map(d => d._id);
+    const values = data.map(d => d.anzahl);
+
+    new Chart(document.getElementById("chartBewegungenProTag"), {
+        type: "line",
+        data: {
+            labels,
+            datasets: [{
+                label: "Bewegungen pro Tag",
+                data: values,
+                borderColor: "blue",
+                fill: false
+            }]
+        },
+        options: {
+    responsive: false,
+    maintainAspectRatio: false
+}
+
+    });
+}
+
 
 
 

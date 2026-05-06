@@ -25,3 +25,26 @@ table, th, td {
 th, td {
     padding: 10px;
 }
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    width: 100%;
+    margin-top: 20px;
+}
+
+.dashboard-card {
+    background: #ffffff;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+canvas {
+    width: 260px !important;
+    height: 200px !important;
+    max-width: 260px !important;
+    max-height: 200px !important;
+    display: block;
+    margin: 0 auto;
+}
