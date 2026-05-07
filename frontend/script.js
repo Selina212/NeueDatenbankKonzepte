@@ -1,6 +1,18 @@
 
 //Author: Selina Steuer
 const API_BASE = "http://localhost:3000/api";
+document.addEventListener("DOMContentLoaded", () => {
+    loadBewegungen();
+    loadProdukteDropdown();
+    loadLagerorteDropdown();
+    initBewegungForm();
+
+    document.getElementById("toggleFormBtn").addEventListener("click", () => {
+        const form = document.getElementById("bewegung-form-container");
+        form.style.display = form.style.display === "none" ? "block" : "none";
+    });
+});
+
 
 // Lagerorte laden
 async function loadLagerorte() {
@@ -26,55 +38,9 @@ async function loadLagerorte() {
 }
 
 
-// Bewegungen laden
-async function loadBewegungen() {
-    // Lagerorte und Bewegungen parallel laden
-    const [bewegRes, lagerRes] = await Promise.all([
-        fetch(`${API_BASE}/bewegungen`),
-        fetch(`${API_BASE}/lagerorte`)
-    ]);
-
-    const bewegungen = await bewegRes.json();
-    const lagerorte = await lagerRes.json();
-
-    // Map: lagerortId -> Bezeichnung
-    const lagerMap = {};
-    lagerorte.forEach(l => {
-        // _id kommt im JSON als String
-        lagerMap[l._id] = l.bezeichnung;
-    });
-
-    const tbody = document.querySelector("#bewegungen-table tbody");
-    tbody.innerHTML = "";
-
-    bewegungen.forEach(b => {
-        const lagerName = lagerMap[b.lagerort_id] || b.lagerort_id || "?";
-
-        tbody.innerHTML += `
-            <tr>
-                <td>${b.typ}</td>
-                <td>${b.menge}</td>
-                <td>${new Date(b.datum).toLocaleDateString()}</td>
-                <td>${lagerName}</td>
-            </tr>
-        `;
-    });
-}
-
-// Dropdown für Lagerorte
-async function loadLagerorteDropdown() {
-    const res = await fetch(`${API_BASE}/lagerorte`);
-    const data = await res.json();
-
-    const select = document.querySelector("#lagerort-select");
-    data.forEach(l => {
-        select.innerHTML += `<option value="${l._id}">${l.bezeichnung}</option>`;
-    });
-}
-
 // Formular absenden
 function initBewegungForm() {
-    const form = document.querySelector("#bewegung-form");
+    const form = document.getElementById("bewegung-form");
 
     form.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -82,7 +48,7 @@ function initBewegungForm() {
         const formData = new FormData(form);
 
         const payload = {
-           typ: formData.get("typ"),
+            typ: formData.get("typ"),
             menge: Number(formData.get("menge")),
             grund: formData.get("grund"),
             produkt_id: formData.get("produkt_id"),
@@ -90,30 +56,29 @@ function initBewegungForm() {
             datum: new Date().toISOString()
         };
 
-        const res = await fetch(`${API_BASE}/bewegungen`, {
+        await fetch(`${API_BASE}/bewegungen`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
         });
 
-        if (res.ok) {
-            alert("Bewegung gespeichert!");
-            window.location.href = "bewegungen.html";
-        } else {
-            alert("Fehler beim Speichern");
-        }
+        loadBewegungen();
+        form.reset();
     });
-
 }
+
 async function loadProdukteDropdown() {
     const res = await fetch(`${API_BASE}/produkte`);
     const data = await res.json();
 
-    const select = document.querySelector("#produkt-select");
+    const select = document.getElementById("produkt-select");
+    select.innerHTML = "";
+
     data.forEach(p => {
         select.innerHTML += `<option value="${p._id}">${p.bezeichnung}</option>`;
     });
 }
+
 function showCreateForm() {
     document.querySelector("#form-title").textContent = "Lagerort anlegen";
     document.querySelector("#lagerort-form").reset();
@@ -262,6 +227,43 @@ async function loadBewegungenProTag() {
     maintainAspectRatio: false
 }
 
+    });
+}
+document.getElementById("toggleFormBtn").addEventListener("click", () => {
+    const form = document.getElementById("bewegung-form-container");
+    form.style.display = form.style.display === "none" ? "block" : "none";
+});
+
+async function loadLagerorteDropdown() {
+    const res = await fetch(`${API_BASE}/lagerorte`);
+    const data = await res.json();
+
+    const select = document.getElementById("lagerort-select");
+    select.innerHTML = "";
+
+    data.forEach(l => {
+        select.innerHTML += `<option value="${l._id}">${l.bezeichnung}</option>`;
+    });
+}
+
+async function loadBewegungen() {
+    const res = await fetch(`${API_BASE}/bewegungen`);
+    const data = await res.json();
+
+    const tbody = document.querySelector("#bewegungen-table tbody");
+    tbody.innerHTML = "";
+
+    data.forEach(b => {
+        tbody.innerHTML += `
+            <tr>
+                <td>${new Date(b.datum).toLocaleDateString()}</td>
+                <td>${b.typ}</td>
+                <td>${b.menge}</td>
+                <td>${b.grund}</td>
+                <td>${b.produkt_bezeichnung || "-"}</td>
+                <td>${b.lagerort_bezeichnung || "-"}</td>
+            </tr>
+        `;
     });
 }
 

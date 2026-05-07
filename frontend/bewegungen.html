@@ -1,4 +1,4 @@
-//Author: Selina Steuer
+<!-- Author: Selina Steuer -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -10,22 +10,55 @@
 
 <h1>Bewegungen</h1>
 
+<!-- Tabelle aller Bewegungen -->
 <table id="bewegungen-table">
     <thead>
         <tr>
+            <th>Datum</th>
             <th>Typ</th>
             <th>Menge</th>
-            <th>Datum</th>
+            <th>Grund</th>
+            <th>Produkt</th>
             <th>Lagerort</th>
         </tr>
     </thead>
     <tbody></tbody>
 </table>
 
+<br>
+
+<!-- Button zum Anzeigen des Formulars -->
+<button id="toggleFormBtn">Neue Bewegung anlegen</button>
+
+<!-- Formular (anfangs versteckt) -->
+<div id="bewegung-form-container" style="display:none; margin-top:20px;">
+    <h2>Neue Bewegung</h2>
+
+    <form id="bewegung-form">
+        <label>Typ:</label>
+        <select name="typ">
+            <option value="Eingang">Eingang</option>
+            <option value="Ausgang">Ausgang</option>
+        </select>
+
+        <label>Menge:</label>
+        <input type="number" name="menge" required>
+
+        <label>Grund:</label>
+        <input type="text" name="grund" required>
+
+        <label>Produkt:</label>
+        <select name="produkt_id" id="produkt-select"></select>
+
+        <label>Lagerort:</label>
+        <select name="lagerort_id" id="lagerort-select"></select>
+
+        <button type="submit">Speichern</button>
+    </form>
+</div>
+
 <script src="script.js"></script>
-<script>
-    loadBewegungen();
-</script>
+
 
 </body>
 </html>
