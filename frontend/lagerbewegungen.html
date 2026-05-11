@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lagerbewegungen</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Lagerverwaltung</h1>
+    <nav>
+      <a href="index.html">Start</a>
+      <a href="produkte.html">Produkte</a>
+      <a href="kategorien.html">Kategorien</a>
+      <a href="lieferanten.html">Lieferanten</a>
+      <a class="aktiv" href="lagerbewegungen.html">Lagerbewegungen</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="meldung" class="meldung"></div>
+
+    <section class="bereich">
+      <h2>Lagerbewegungen</h2>
+      <div class="tabelle-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Typ</th>
+              <th>Menge</th>
+              <th>Grund</th>
+              <th>Produkt</th>
+              <th>Lieferant</th>
+              <th>Kontakt Email</th>
+            </tr>
+          </thead>
+          <tbody id="lagerbewegungen-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    const body = document.querySelector('#lagerbewegungen-body')
+    const meldung = document.querySelector('#meldung')
+
+    function zeigeFehler(text) {
+      meldung.textContent = text
+      meldung.className = 'meldung fehler'
+    }
+
+    function leereFehler() {
+      meldung.textContent = ''
+      meldung.className = 'meldung'
+    }
+
+    function wert(value) {
+      return value ?? ''
+    }
+
+    function datum(value) {
+      return value ? new Date(value).toLocaleDateString('de-DE') : ''
+    }
+
+    async function ladeLagerbewegungen() {
+      const result = await getLagerbewegungen()
+      if (!result.ok) {
+        zeigeFehler(result.error)
+        return
+      }
+
+      leereFehler()
+      body.innerHTML = ''
+
+      if (!result.data.length) {
+        body.innerHTML = '<tr><td class="leer" colspan="7">Keine Lagerbewegungen vorhanden.</td></tr>'
+        return
+      }
+
+      result.data.forEach(bewegung => {
+        const produkt = bewegung.produkt || {}
+        const lieferant = bewegung.lieferant || {}
+        const kontakt = lieferant.kontakt || {}
+
+        body.insertAdjacentHTML('beforeend', `
+          <tr>
+            <td>${datum(bewegung.datum)}</td>
+            <td>${wert(bewegung.typ)}</td>
+            <td>${wert(bewegung.menge)}</td>
+            <td>${wert(bewegung.grund)}</td>
+            <td>${wert(produkt.bezeichnung)}</td>
+            <td>${wert(lieferant.name)}</td>
+            <td>${wert(kontakt.email)}</td>
+          </tr>
+        `)
+      })
+    }
+
+    ladeLagerbewegungen()
+  </script>
+</body>
+</html>
