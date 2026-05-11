@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Produkte</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Lagerverwaltung</h1>
+    <nav>
+      <a href="index.html">Start</a>
+      <a class="aktiv" href="produkte.html">Produkte</a>
+      <a href="kategorien.html">Kategorien</a>
+      <a href="lieferanten.html">Lieferanten</a>
+      <a href="lagerbewegungen.html">Lagerbewegungen</a>
+    </nav>
+  </header>
+
+  <main>
+    <div id="meldung" class="meldung"></div>
+
+    <section class="bereich">
+      <h2>Produkte</h2>
+      <div class="suchleiste">
+        <label for="suche">Produktsuche</label>
+        <input id="suche" type="search" placeholder="Bezeichnung suchen">
+      </div>
+      <div class="tabelle-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Artikelnummer</th>
+              <th>Bezeichnung</th>
+              <th>Preis</th>
+              <th>Bestand</th>
+              <th>Mindestbestand</th>
+              <th>Einheit</th>
+              <th>Kategorie</th>
+              <th>Lieferant</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="produkte-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <form id="produkt-form">
+      <h2>Produkt anlegen</h2>
+      <div class="formular-grid">
+        <div class="feld">
+          <label for="artikelnummer">Artikelnummer</label>
+          <input id="artikelnummer" name="artikelnummer" required>
+        </div>
+        <div class="feld">
+          <label for="bezeichnung">Bezeichnung</label>
+          <input id="bezeichnung" name="bezeichnung" required>
+        </div>
+        <div class="feld ganz">
+          <label for="beschreibung">Beschreibung</label>
+          <textarea id="beschreibung" name="beschreibung"></textarea>
+        </div>
+        <div class="feld">
+          <label for="preis">Preis</label>
+          <input id="preis" name="preis" type="number" min="0" step="0.01">
+        </div>
+        <div class="feld">
+          <label for="bestand">Bestand</label>
+          <input id="bestand" name="bestand" type="number" step="1">
+        </div>
+        <div class="feld">
+          <label for="mindestbestand">Mindestbestand</label>
+          <input id="mindestbestand" name="mindestbestand" type="number" min="0" step="1">
+        </div>
+        <div class="feld">
+          <label for="einheit">Einheit</label>
+          <input id="einheit" name="einheit">
+        </div>
+        <div class="feld">
+          <label for="kategorie-id">Kategorie</label>
+          <select id="kategorie-id" name="kategorie_id"></select>
+        </div>
+        <div class="feld">
+          <label for="lieferant-id">Lieferant</label>
+          <select id="lieferant-id" name="lieferant_id"></select>
+        </div>
+      </div>
+      <p>
+        <button class="btn-anlegen" type="submit">Speichern</button>
+      </p>
+    </form>
+  </main>
+
+  <script src="api.js"></script>
+  <script>
+    const body = document.querySelector('#produkte-body')
+    const meldung = document.querySelector('#meldung')
+    const suche = document.querySelector('#suche')
+    let produkte = []
+    let kategorien = []
+    let lieferanten = []
+
+    function zeigeFehler(text) {
+      meldung.textContent = text
+      meldung.className = 'meldung fehler'
+    }
+
+    function leereFehler() {
+      meldung.textContent = ''
+      meldung.className = 'meldung'
+    }
+
+    function wert(value) {
+      return value ?? ''
+    }
+
+    function zahl(value) {
+      return value === '' || value === null ? undefined : Number(value)
+    }
+
+    function euro(value) {
+      return Number(value || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
+    }
+
+    async function pruefe(result) {
+      if (!result.ok) {
+        zeigeFehler(result.error)
+        return null
+      }
+      leereFehler()
+      return result.data
+    }
+
+    function nameAusListe(liste, id) {
+      const eintrag = liste.find(item => item._id === id)
+      return eintrag ? eintrag.name : ''
+    }
+
+    function fuelleDropdown(select, daten, platzhalter) {
+      select.innerHTML = `<option value="">${platzhalter}</option>`
+      daten.forEach(eintrag => {
+        const option = document.createElement('option')
+        option.value = eintrag._id
+        option.textContent = eintrag.name
+        select.appendChild(option)
+      })
+    }
+
+    async function ladeAuswahlDaten() {
+      kategorien = await pruefe(await getKategorien()) || []
+      lieferanten = await pruefe(await getLieferanten()) || []
+      fuelleDropdown(document.querySelector('#kategorie-id'), kategorien, 'Keine Kategorie')
+      fuelleDropdown(document.querySelector('#lieferant-id'), lieferanten, 'Kein Lieferant')
+    }
+
+    async function ladeProdukte() {
+      const q = suche.value.trim()
+      produkte = await pruefe(q ? await sucheProdukte(q) : await getProdukte()) || []
+      renderProdukte()
+    }
+
+    function renderProdukte() {
+      body.innerHTML = ''
+
+      if (!produkte.length) {
+        body.innerHTML = '<tr><td class="leer" colspan="9">Keine Produkte vorhanden.</td></tr>'
+        return
+      }
+
+      produkte.forEach(produkt => {
+        const kritisch = Number(produkt.bestand || 0) < Number(produkt.mindestbestand || 0)
+        body.insertAdjacentHTML('beforeend', `
+          <tr data-id="${produkt._id}" class="${kritisch ? 'kritisch' : ''}">
+            <td>${wert(produkt.artikelnummer)}</td>
+            <td>${wert(produkt.bezeichnung)}</td>
+            <td>${euro(produkt.preis)}</td>
+            <td>${wert(produkt.bestand)}</td>
+            <td>${wert(produkt.mindestbestand)}</td>
+            <td>${wert(produkt.einheit)}</td>
+            <td>${nameAusListe(kategorien, produkt.kategorie_id)}</td>
+            <td>${nameAusListe(lieferanten, produkt.lieferant_id)}</td>
+            <td>
+              <div class="aktionen">
+                <button class="btn-bearbeiten" type="button" data-action="edit">Bearbeiten</button>
+                <button class="btn-loeschen" type="button" data-action="delete">Loeschen</button>
+              </div>
+            </td>
+          </tr>
+        `)
+      })
+    }
+
+    function optionen(daten, aktivId, platzhalter) {
+      const optionenHtml = [`<option value="">${platzhalter}</option>`]
+      daten.forEach(eintrag => {
+        const selected = eintrag._id === aktivId ? 'selected' : ''
+        optionenHtml.push(`<option value="${eintrag._id}" ${selected}>${eintrag.name}</option>`)
+      })
+      return optionenHtml.join('')
+    }
+
+    function datenAusZeile(row) {
+      return {
+        artikelnummer: row.querySelector('[name="artikelnummer"]').value,
+        bezeichnung: row.querySelector('[name="bezeichnung"]').value,
+        beschreibung: row.querySelector('[name="beschreibung"]').value,
+        preis: zahl(row.querySelector('[name="preis"]').value),
+        bestand: zahl(row.querySelector('[name="bestand"]').value),
+        mindestbestand: zahl(row.querySelector('[name="mindestbestand"]').value),
+        einheit: row.querySelector('[name="einheit"]').value,
+        kategorie_id: row.querySelector('[name="kategorie_id"]').value || undefined,
+        lieferant_id: row.querySelector('[name="lieferant_id"]').value || undefined
+      }
+    }
+
+    function inlineEdit(row) {
+      const produkt = produkte.find(item => item._id === row.dataset.id)
+
+      row.innerHTML = `
+        <td><input name="artikelnummer" required value="${wert(produkt.artikelnummer)}"></td>
+        <td>
+          <input name="bezeichnung" required value="${wert(produkt.bezeichnung)}">
+          <textarea name="beschreibung" placeholder="Beschreibung">${wert(produkt.beschreibung)}</textarea>
+        </td>
+        <td><input name="preis" type="number" min="0" step="0.01" value="${wert(produkt.preis)}"></td>
+        <td><input name="bestand" type="number" step="1" value="${wert(produkt.bestand)}"></td>
+        <td><input name="mindestbestand" type="number" min="0" step="1" value="${wert(produkt.mindestbestand)}"></td>
+        <td><input name="einheit" value="${wert(produkt.einheit)}"></td>
+        <td><select name="kategorie_id">${optionen(kategorien, produkt.kategorie_id, 'Keine Kategorie')}</select></td>
+        <td><select name="lieferant_id">${optionen(lieferanten, produkt.lieferant_id, 'Kein Lieferant')}</select></td>
+        <td>
+          <div class="aktionen">
+            <button class="btn-anlegen" type="button" data-action="save">Speichern</button>
+            <button class="btn-loeschen" type="button" data-action="cancel">Abbrechen</button>
+          </div>
+        </td>
+      `
+    }
+
+    body.addEventListener('click', async event => {
+      const action = event.target.dataset.action
+      if (!action) return
+
+      const row = event.target.closest('tr')
+      const id = row.dataset.id
+
+      if (action === 'edit') inlineEdit(row)
+      if (action === 'cancel') ladeProdukte()
+
+      if (action === 'save') {
+        const result = await updateProdukt(id, datenAusZeile(row))
+        if (await pruefe(result)) ladeProdukte()
+      }
+
+      if (action === 'delete' && confirm('Produkt wirklich loeschen?')) {
+        const result = await deleteProdukt(id)
+        if (await pruefe(result)) ladeProdukte()
+      }
+    })
+
+    document.querySelector('#produkt-form').addEventListener('submit', async event => {
+      event.preventDefault()
+      const form = event.currentTarget
+      const data = {
+        artikelnummer: form.elements.artikelnummer.value,
+        bezeichnung: form.elements.bezeichnung.value,
+        beschreibung: form.elements.beschreibung.value,
+        preis: zahl(form.elements.preis.value),
+        bestand: zahl(form.elements.bestand.value),
+        mindestbestand: zahl(form.elements.mindestbestand.value),
+        einheit: form.elements.einheit.value,
+        kategorie_id: form.elements.kategorie_id.value || undefined,
+        lieferant_id: form.elements.lieferant_id.value || undefined
+      }
+      const result = await createProdukt(data)
+      if (await pruefe(result)) {
+        form.reset()
+        ladeProdukte()
+      }
+    })
+
+    suche.addEventListener('input', ladeProdukte)
+
+    async function init() {
+      await ladeAuswahlDaten()
+      await ladeProdukte()
+    }
+
+    init()
+  </script>
+</body>
+</html>
