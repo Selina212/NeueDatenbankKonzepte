@@ -116,55 +116,6 @@ function getLagerbewegungById(id) {
   return request(`/lagerbewegungen/${id}`)
 }
 
-function createLagerbewegung(data) {
-  return request('/lagerbewegungen', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  })
-}
-
 function getLagerbewegungKette(id) {
   return request(`/lagerbewegungen/${id}/kette`)
-}
-
-function getLagerorte() {
-  return request('/lagerorte')
-}
-
-function getLagerortById(id) {
-  return request(`/lagerorte/${id}`)
-}
-
-function createLagerort(data) {
-  return request('/lagerorte', {
-    method: 'POST',
-    body: JSON.stringify(data)
-  })
-}
-
-function updateLagerort(id, data) {
-  return request(`/lagerorte/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  })
-}
-
-function deleteLagerort(id) {
-  return request(`/lagerorte/${id}`, { method: 'DELETE' })
-}
-
-function getLagerwert() {
-  return request('/aggregationen/lagerwert')
-}
-
-function getProdukteProKategorie() {
-  return request('/aggregationen/produkte-pro-kategorie')
-}
-
-function getBewegungenProLagerort() {
-  return request('/aggregationen/pro-lagerort')
-}
-
-function getBewegungenProTag() {
-  return request('/aggregationen/pro-tag')
 }
