@@ -19,11 +19,16 @@ router.get('/', async (req, res) => {
         path: 'produkt_id',
         model: Produkt,
         populate: { path: 'lieferant_id', model: Lieferant }
+      })
+      .populate({
+        path: 'lagerort_id',
+        model: Lagerort
       });
 
     const daten = lagerbewegungen.map(bewegung => {
       const produkt = bewegung.produkt_id;
       const lieferant = produkt?.lieferant_id || null;
+      const lagerort = bewegung.lagerort_id;
 
       return {
         _id: bewegung._id,
@@ -32,7 +37,8 @@ router.get('/', async (req, res) => {
         menge: bewegung.menge,
         grund: bewegung.grund,
         produkt,
-        lieferant
+        lieferant,
+        lagerort
       };
     });
 
@@ -41,6 +47,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Lagerbewegungen konnten nicht geladen werden', details: err.message });
   }
 });
+
 
 /* ============================================================
    GET: Einzelne Bewegung
@@ -163,5 +170,6 @@ router.post('/', async (req, res) => {
     if (session) session.endSession();
   }
 });
+
 
 module.exports = router;

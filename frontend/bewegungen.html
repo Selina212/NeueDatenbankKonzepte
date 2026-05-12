@@ -1,14 +1,14 @@
-<!-- Author: Selina Steuer -->
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Bewegungen</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lagerbewegungen</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<header>
-    <h1>Bewegungen</h1>
+  <header>
+    <h1>Lagerverwaltung</h1>
     <nav>
       <a href="index.html">Start</a>
       <a href="produkte.html">Produkte</a>
@@ -17,58 +17,83 @@
       <a href="lagerbewegungen.html">4er-Kette</a>
       <a href="dashboard.html">Dashboard</a>
       <a href="lagerorte.html">Lagerorte</a>
-      <a class="aktiv"href="bewegungen.html">Bewegungen</a>
+      <a class="aktiv" href="bewegungen.html">Bewegungen</a>
     </nav>
   </header>
-<!-- Tabelle aller Bewegungen -->
-<table id="bewegungen-table">
-    <thead>
-        <tr>
-            <th>Datum</th>
-            <th>Typ</th>
-            <th>Menge</th>
-            <th>Grund</th>
-            <th>Produkt</th>
-            <th>Lagerort</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
-</table>
 
-<br>
+  <main>
+    <div id="meldung" class="meldung"></div>
 
-<!-- Button zum Anzeigen des Formulars -->
-<button id="toggleFormBtn">Neue Bewegung anlegen</button>
-
-<!-- Formular (anfangs versteckt) -->
-<div id="bewegung-form-container" style="display:none; margin-top:20px;">
-    <h2>Neue Bewegung</h2>
+    <section class="bereich">
+      <h2>Lagerbewegungen</h2>
+      <div class="tabelle-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>Typ</th>
+              <th>Menge</th>
+              <th>Grund</th>
+              <th>Produkt</th>
+              <th>Lagerort</th>
+              <th>Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="bewegungen-body"></tbody>
+        </table>
+      </div>
+    </section>
 
     <form id="bewegung-form">
-        <label>Typ:</label>
-        <select name="typ">
-            <option value="Eingang">Eingang</option>
-            <option value="Ausgang">Ausgang</option>
-        </select>
+      <h2>Bewegung anlegen</h2>
+      <div class="formular-grid">
+        <div class="feld">
+          <label for="datum">Datum</label>
+          <input id="datum" name="datum" type="date" required>
+        </div>
 
-        <label>Menge:</label>
-        <input type="number" name="menge" required>
-
-        <label>Grund:</label>
-        <input type="text" name="grund" required>
-
-        <label>Produkt:</label>
-        <select name="produkt_id" id="produkt-select"></select>
-
-        <label>Lagerort:</label>
-        <select name="lagerort_id" id="lagerort-select"></select>
-
-        <button type="submit">Speichern</button>
-    </form>
+        <div class="feld">
+  <label for="typ">Typ</label>
+  <select id="typ" name="typ" required>
+    <option value="">Bitte wählen…</option>
+    <option value="Eingang">Eingang</option>
+    <option value="Ausgang">Ausgang</option>
+  </select>
 </div>
 
-<script src="script.js"></script>
+
+        <div class="feld">
+          <label for="menge">Menge</label>
+          <input id="menge" name="menge" type="number" required>
+        </div>
+
+        <div class="feld">
+          <label for="grund">Grund</label>
+          <input id="grund" name="grund">
+        </div>
+
+        <div class="feld">
+  <label for="produkt_id">Produkt</label>
+  <select id="produkt_id" name="produkt_id" required>
+    <option value="">Bitte wählen…</option>
+  </select>
+</div>
+
+<div class="feld">
+  <label for="lagerort_id">Lagerort</label>
+  <select id="lagerort_id" name="lagerort_id" required>
+    <option value="">Bitte wählen…</option>
+  </select>
+</div>
 
 
+      <p>
+        <button class="btn-anlegen" type="submit">Speichern</button>
+      </p>
+    </form>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/bewegungen.js"></script>
 </body>
 </html>
