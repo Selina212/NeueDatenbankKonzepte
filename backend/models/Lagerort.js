@@ -1,12 +1,10 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
-const lagerortSchema = new mongoose.Schema({
-  bezeichnung: {
-    type: String,
-    required: true
-  },
-  halle: String,
-  kapazitaet: Number
-})
+const LagerortSchema = new mongoose.Schema({
+  bezeichnung: { type: String, required: true, trim: true },
+  halle: { type: String, required: true, trim: true },
+  kapazität: { type: Number, default: 0 }
+});
 
-module.exports = mongoose.model('Lagerort', lagerortSchema, 'lagerorte')
+module.exports = mongoose.model('Lagerort', LagerortSchema, 'lagerorte');
+

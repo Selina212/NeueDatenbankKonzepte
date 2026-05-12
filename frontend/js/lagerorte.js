@@ -1,8 +1,6 @@
 const body = document.querySelector('#lagerorte-body')
 const meldung = document.querySelector('#meldung')
-const form = document.querySelector('#lagerort-form')
-const formContainer = document.querySelector('#lagerort-form-container')
-const formTitel = document.querySelector('#form-title')
+let lagerorte = []
 
 function zeigeFehler(text) {
   meldung.textContent = text
@@ -27,19 +25,16 @@ async function pruefe(result) {
   return result.data
 }
 
-function showCreateForm() {
-  formTitel.textContent = 'Lagerort anlegen'
-  form.reset()
-  form.elements.id.value = ''
-  formContainer.style.display = 'block'
-}
-
-function hideForm() {
-  formContainer.style.display = 'none'
+function datenAusZeile(row) {
+  return {
+    bezeichnung: row.querySelector('[name="bezeichnung"]').value,
+    halle: row.querySelector('[name="halle"]').value,
+    kapazität: Number(row.querySelector('[name="kapazität"]').value)
+  }
 }
 
 async function ladeLagerorte() {
-  const lagerorte = await pruefe(await getLagerorte()) || []
+  lagerorte = await pruefe(await getLagerorte()) || []
   body.innerHTML = ''
 
   if (!lagerorte.length) {
@@ -47,21 +42,37 @@ async function ladeLagerorte() {
     return
   }
 
-  lagerorte.forEach(lagerort => {
+  lagerorte.forEach(item => {
     body.insertAdjacentHTML('beforeend', `
-      <tr data-id="${lagerort._id}">
-        <td>${wert(lagerort.bezeichnung)}</td>
-        <td>${wert(lagerort.halle)}</td>
-        <td>${wert(lagerort.kapazitaet)}</td>
+      <tr data-id="${item._id}">
+        <td>${wert(item.bezeichnung)}</td>
+        <td>${wert(item.halle)}</td>
+        <td>${wert(item.kapazität)}</td>
         <td>
           <div class="aktionen">
             <button class="btn-bearbeiten" type="button" data-action="edit">Bearbeiten</button>
-            <button class="btn-loeschen" type="button" data-action="delete">Loeschen</button>
+            <button class="btn-loeschen" type="button" data-action="delete">Löschen</button>
           </div>
         </td>
       </tr>
     `)
   })
+}
+
+function inlineEdit(row) {
+  const item = lagerorte.find(x => x._id === row.dataset.id)
+
+  row.innerHTML = `
+    <td><input name="bezeichnung" required value="${wert(item.bezeichnung)}"></td>
+    <td><input name="halle" required value="${wert(item.halle)}"></td>
+    <td><input name="kapazität" type="number" required value="${wert(item.kapazität)}"></td>
+    <td>
+      <div class="aktionen">
+        <button class="btn-anlegen" type="button" data-action="save">Speichern</button>
+        <button class="btn-loeschen" type="button" data-action="cancel">Abbrechen</button>
+      </div>
+    </td>
+  `
 }
 
 body.addEventListener('click', async event => {
@@ -71,40 +82,33 @@ body.addEventListener('click', async event => {
   const row = event.target.closest('tr')
   const id = row.dataset.id
 
-  if (action === 'edit') {
-    const lagerort = await pruefe(await getLagerortById(id))
-    if (!lagerort) return
+  if (action === 'edit') inlineEdit(row)
+  if (action === 'cancel') ladeLagerorte()
 
-    formTitel.textContent = 'Lagerort bearbeiten'
-    form.elements.id.value = lagerort._id
-    form.elements.bezeichnung.value = lagerort.bezeichnung || ''
-    form.elements.halle.value = lagerort.halle || ''
-    form.elements.kapazitaet.value = lagerort.kapazitaet || ''
-    formContainer.style.display = 'block'
+  if (action === 'save') {
+    const result = await updateLagerort(id, datenAusZeile(row))
+    if (await pruefe(result)) ladeLagerorte()
   }
 
-  if (action === 'delete' && confirm('Diesen Lagerort wirklich loeschen?')) {
+  if (action === 'delete' && confirm('Lagerort wirklich löschen?')) {
     const result = await deleteLagerort(id)
     if (await pruefe(result)) ladeLagerorte()
   }
 })
 
-document.querySelector('#show-create-form').addEventListener('click', showCreateForm)
-document.querySelector('#hide-form').addEventListener('click', hideForm)
-
-form.addEventListener('submit', async event => {
+document.querySelector('#lagerort-form').addEventListener('submit', async event => {
   event.preventDefault()
+  const form = event.currentTarget
 
-  const id = form.elements.id.value
   const data = {
     bezeichnung: form.elements.bezeichnung.value,
     halle: form.elements.halle.value,
-    kapazitaet: Number(form.elements.kapazitaet.value)
+    kapazität: Number(form.elements.kapazität.value)
   }
 
-  const result = id ? await updateLagerort(id, data) : await createLagerort(data)
+  const result = await createLagerort(data)
   if (await pruefe(result)) {
-    hideForm()
+    form.reset()
     ladeLagerorte()
   }
 })

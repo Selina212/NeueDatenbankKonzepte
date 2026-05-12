@@ -139,3 +139,22 @@ function getBewegungenProTag() {
 function getTypAnzahl() {
   return request('/aggregationen/typ-anzahl');
 }
+function getLagerorte() {
+  return request('/lagerorte');
+}
+
+function getLagerortById(id) {
+  return request(`/lagerorte/${id}`);
+}
+
+function createLagerort(data) {
+  return request('/lagerorte', { method: 'POST', body: JSON.stringify(data) });
+}
+
+function updateLagerort(id, data) {
+  return request(`/lagerorte/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+}
+
+function deleteLagerort(id) {
+  return request(`/lagerorte/${id}`, { method: 'DELETE' });
+}
