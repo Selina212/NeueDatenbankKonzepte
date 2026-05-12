@@ -1,0 +1,273 @@
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --text: #20242a;
+  --muted: #667085;
+  --line: #d7dce2;
+  --green: #21875a;
+  --blue: #246bce;
+  --red: #c0392b;
+  --red-bg: #fde8e6;
+  --row: #fafbfc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.45;
+}
+
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 20px 32px 0;
+}
+
+h1 {
+  font-size: 26px;
+  margin: 0 0 16px;
+}
+
+h2 {
+  font-size: 20px;
+  margin: 0 0 16px;
+}
+
+nav {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+}
+
+nav a {
+  border: 1px solid transparent;
+  border-bottom: 0;
+  color: var(--muted);
+  padding: 11px 14px;
+  text-decoration: none;
+}
+
+nav a.aktiv {
+  background: var(--bg);
+  border-color: var(--line);
+  color: var(--text);
+  font-weight: 700;
+}
+
+main {
+  padding: 24px 32px 40px;
+}
+
+.start-links {
+  display: grid;
+  gap: 12px;
+  max-width: 520px;
+}
+
+.start-links a {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 14px;
+  text-decoration: none;
+}
+
+.bereich {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.suchleiste {
+  margin-bottom: 14px;
+  max-width: 420px;
+}
+
+.tabelle-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+}
+
+th,
+td {
+  border: 1px solid var(--line);
+  padding: 9px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #eef1f4;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+tbody tr:nth-child(even) {
+  background: var(--row);
+}
+
+tr.kritisch {
+  background: var(--red-bg);
+}
+
+form {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 18px;
+  max-width: 760px;
+  padding: 18px;
+}
+
+.formular-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.feld {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.feld.ganz {
+  grid-column: 1 / -1;
+}
+
+label {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font: inherit;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  padding: 8px 11px;
+}
+
+.btn-anlegen {
+  background: var(--green);
+}
+
+.btn-bearbeiten {
+  background: var(--blue);
+}
+
+.btn-loeschen {
+  background: var(--red);
+}
+
+.aktionen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.seiten-aktionen {
+  margin-bottom: 14px;
+}
+
+.details:empty {
+  display: none;
+}
+
+.details {
+  margin-top: 18px;
+}
+
+.details p {
+  margin: 8px 0;
+}
+
+.dashboard-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.kennzahl {
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.chart-card {
+  min-height: 320px;
+}
+
+.chart-card canvas {
+  min-height: 240px;
+}
+
+.meldung {
+  display: none;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+}
+
+.meldung.fehler {
+  display: block;
+  background: var(--red-bg);
+  border: 1px solid #efb4ad;
+  color: var(--red);
+}
+
+.leer {
+  color: var(--muted);
+  padding: 12px;
+}
+
+@media (max-width: 760px) {
+  header,
+  main {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .formular-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
