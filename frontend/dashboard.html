@@ -5,8 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="./css/style.css">
 </head>
 
 <body>
@@ -26,10 +25,10 @@
         <h2>Produkte pro Kategorie</h2>
         <table id="kategorien-table">
             <thead>
-                <tr>
-                    <th>Kategorie</th>
-                    <th>Anzahl Produkte</th>
-                </tr>
+            <tr>
+                <th>Kategorie</th>
+                <th>Anzahl Produkte</th>
+            </tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -40,10 +39,10 @@
         <h2>Bewegungen pro Lagerort</h2>
         <table id="lagerort-table">
             <thead>
-                <tr>
-                    <th>Lagerort</th>
-                    <th>Anzahl Bewegungen</th>
-                </tr>
+            <tr>
+                <th>Lagerort</th>
+                <th>Anzahl Bewegungen</th>
+            </tr>
             </thead>
             <tbody></tbody>
         </table>
@@ -66,11 +65,13 @@
     </div>
 
 </div>
+<script src="js/api.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="js/dashboard.js"></script>
+<script>loadDashboard();</script>
 
-<script src="script.js"></script>
-<script>
-    loadDashboard();
-</script>
+</body>
+</html>
 
 </body>
 </html>

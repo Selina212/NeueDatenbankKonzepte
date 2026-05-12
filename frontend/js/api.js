@@ -119,3 +119,23 @@ function getLagerbewegungById(id) {
 function getLagerbewegungKette(id) {
   return request(`/lagerbewegungen/${id}/kette`)
 }
+// Aggregationen (hinzufügen in api.js)
+function getLagerwert() {
+  return request('/aggregationen/lagerwert');
+}
+
+function getProdukteProKategorie() {
+  return request('/aggregationen/produkte-pro-kategorie');
+}
+
+function getBewegungenProLagerort() {
+  return request('/aggregationen/pro-lagerort');
+}
+
+function getBewegungenProTag() {
+  return request('/aggregationen/pro-tag');
+}
+
+function getTypAnzahl() {
+  return request('/aggregationen/typ-anzahl');
+}
