@@ -141,16 +141,18 @@ function getLagerwert() {
   return request('/aggregationen/lagerwert');
 }
 
-function getProdukteProKategorie() {
-  return request('/aggregationen/produkte-pro-kategorie');
+function getProdukteProKategorie(query = "") {
+  return request("/aggregationen/produkte-pro-kategorie" + (query ? "?" + query : ""));
 }
 
-function getBewegungenProLagerort() {
-  return request('/aggregationen/pro-lagerort');
+
+function getBewegungenProLagerort(query = "") {
+  return request("/aggregationen/pro-lagerort" + (query ? "?" + query : ""));
 }
 
-function getBewegungenProTag() {
-  return request('/aggregationen/pro-tag');
+
+function getBewegungenProTag(query = "") {
+  return request("/aggregationen/pro-tag" + (query ? "?" + query : ""));
 }
 
 function getTypAnzahl() {

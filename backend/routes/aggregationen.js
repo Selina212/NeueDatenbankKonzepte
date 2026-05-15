@@ -58,18 +58,49 @@ router.get('/typ-anzahl', async (req, res) => {
    ============================================================ */
 router.get('/pro-lagerort', async (req, res) => {
   try {
+
+    // -----------------------------
+    // FILTER SAMMELN
+    // -----------------------------
+    const match = {};
+
+    // Zeitraum
+    if (req.query.from || req.query.to) {
+      match.datum = {};
+      if (req.query.from) match.datum.$gte = new Date(req.query.from);
+      if (req.query.to) match.datum.$lte = new Date(req.query.to);
+    }
+
+    // Lagerort
+    if (req.query.lagerort) {
+      match.lagerort_id = req.query.lagerort; // String → wird später gecastet
+    }
+
+    // Produkt
+    if (req.query.produkt) {
+      match.produkt_id = req.query.produkt;
+    }
+
     const result = await Lagerbewegung.aggregate([
+      // FILTER anwenden
+      { $match: match },
+
+      // String → ObjectId casten
       {
         $addFields: {
           lagerort_id_obj: { $toObjectId: "$lagerort_id" }
         }
       },
+
+      // Gruppieren
       {
         $group: {
           _id: "$lagerort_id_obj",
           anzahl: { $sum: 1 }
         }
       },
+
+      // Lookup auf DEINE Collection "lagerorte"
       {
         $lookup: {
           from: "lagerorte",
@@ -78,6 +109,8 @@ router.get('/pro-lagerort', async (req, res) => {
           as: "lagerort"
         }
       },
+
+      // Bezeichnung extrahieren
       {
         $project: {
           anzahl: 1,
@@ -89,16 +122,16 @@ router.get('/pro-lagerort', async (req, res) => {
           }
         }
       },
+
       { $sort: { anzahl: -1 } }
     ]);
 
     res.json(result);
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
-
-
 
 /* ============================================================
    4) Gesamtwert des Lagers

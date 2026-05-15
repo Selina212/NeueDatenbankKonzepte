@@ -18,12 +18,77 @@ async function loadDashboard() {
       loadLagerwert(),
       loadProdukteProKategorie(),
       loadBewegungenProLagerort(),
-      loadBewegungenProTag()
+      loadBewegungenProTag(),
+      loadFilterDropdowns()
+
     ]);
     await loadBewegungenCount();
   } catch (err) {
     console.error('Dashboard laden fehlgeschlagen:', err);
   }
+}
+function getFilterParams() {
+  const params = new URLSearchParams();
+
+  const from = document.getElementById("filter-from")?.value;
+  const to = document.getElementById("filter-to")?.value;
+  const lagerort = document.getElementById("filter-lagerort")?.value;
+  const produkt = document.getElementById("filter-produkt")?.value;
+
+  if (from) params.append("from", from);
+  if (to) params.append("to", to);
+  if (lagerort) params.append("lagerort", lagerort);
+  if (produkt) params.append("produkt", produkt);
+
+  return params.toString();
+}
+
+async function loadFilterDropdowns() {
+    // aktuelle Auswahl merken
+    const selectedLagerort = document.getElementById("filter-lagerort")?.value || "";
+    const selectedProdukt = document.getElementById("filter-produkt")?.value || "";
+
+    const lagerorteRes = await getLagerorte();
+    const produkteRes = await getProdukte();
+
+    const lagerorte = lagerorteRes.data ?? [];
+    const produkte = produkteRes.data ?? [];
+
+    const lagerortSelect = document.getElementById("filter-lagerort");
+    const produktSelect = document.getElementById("filter-produkt");
+
+    // Dropdowns leeren
+    lagerortSelect.innerHTML = '<option value="">Alle</option>';
+    produktSelect.innerHTML = '<option value="">Alle</option>';
+
+    // Lagerorte einfügen
+    lagerorte.forEach(l => {
+        const opt = document.createElement("option");
+        opt.value = l._id;
+        opt.textContent = l.bezeichnung;
+        lagerortSelect.appendChild(opt);
+    });
+
+    // Produkte einfügen
+    produkte.forEach(p => {
+        const opt = document.createElement("option");
+        opt.value = p._id;
+        opt.textContent = p.bezeichnung;
+        produktSelect.appendChild(opt);
+    });
+
+    // Auswahl wiederherstellen
+    lagerortSelect.value = selectedLagerort;
+    produktSelect.value = selectedProdukt;
+}
+
+function resetFilters() {
+  document.getElementById("filter-from").value = "";
+  document.getElementById("filter-to").value = "";
+  document.getElementById("filter-lagerort").value = "";
+  document.getElementById("filter-produkt").value = "";
+
+  loadDashboard();
 }
 
 /* ---------------- KPI: Lagerwert ---------------- */
@@ -48,15 +113,15 @@ async function loadLagerwert() {
 /* ---------------- Tabellen + Chart: Produkte pro Kategorie ---------------- */
 async function loadProdukteProKategorie() {
   try {
-    const res = await getProdukteProKategorie();
+    const res = await getProdukteProKategorie(getFilterParams());
     if (!res.ok) throw new Error(res.error || 'Keine Daten');
 
     const data = res.data ?? res;
     populateTable('#kategorien-table tbody', data, row => {
-      return `<td>${escapeHtml(row.bezeichnung ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
+      return `<td>${escapeHtml(row._id ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
     });
 
-    const labels = data.map(r => r.bezeichnung ?? 'Unbekannt');
+    const labels = data.map(r => r._id ?? 'Unbekannt');
     const values = data.map(r => r.anzahl ?? 0);
     renderPie('chartProdukteProKategorie', labels, values);
   } catch (err) {
@@ -67,7 +132,7 @@ async function loadProdukteProKategorie() {
 /* ---------------- Tabellen + Chart: Bewegungen pro Lagerort ---------------- */
 async function loadBewegungenProLagerort() {
   try {
-    const res = await getBewegungenProLagerort();
+    const res = await getBewegungenProLagerort(getFilterParams());
     if (!res.ok) throw new Error(res.error || 'Keine Daten');
 
     const data = res.data ?? res;
@@ -86,7 +151,7 @@ async function loadBewegungenProLagerort() {
 /* ---------------- Chart: Bewegungen pro Tag ---------------- */
 async function loadBewegungenProTag() {
   try {
-    const res = await getBewegungenProTag();
+    const res = await getBewegungenProTag(getFilterParams());
     if (!res.ok) throw new Error(res.error || 'Keine Daten');
 
     const data = (res.data ?? res).slice().sort((a, b) => String(a._id).localeCompare(String(b._id)));
@@ -101,7 +166,7 @@ async function loadBewegungenProTag() {
 /* ---------------- KPI: Gesamtanzahl Bewegungen ---------------- */
 async function loadBewegungenCount() {
   try {
-    const res = await getBewegungenProTag();
+    const res = await getBewegungenProTag(getFilterParams());
     if (!res.ok) return;
     const data = res.data ?? res;
     const total = (Array.isArray(data) ? data : []).reduce((s, r) => s + (r.anzahl ?? 0), 0);
@@ -184,6 +249,21 @@ function escapeHtml(str) {
   if (str == null) return '';
   return String(str).replace(/[&<>"']/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
 }
+document.getElementById("filter-apply").addEventListener("click", loadDashboard);
+document.addEventListener("DOMContentLoaded", () => {
+  const applyBtn = document.getElementById("filter-apply");
+  const resetBtn = document.getElementById("filter-reset");
+
+  if (applyBtn) {
+    applyBtn.disabled = false;
+    applyBtn.addEventListener("click", loadDashboard);
+  }
+
+  if (resetBtn) {
+    resetBtn.disabled = false;
+    resetBtn.addEventListener("click", resetFilters);
+  }
+});
 
 /* ---------------- Export for older HTML that calls loadDashboard() directly ---------------- */
 window.loadDashboard = loadDashboard;
