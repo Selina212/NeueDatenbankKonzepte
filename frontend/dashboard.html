@@ -22,6 +22,26 @@
       <a href="bewegungen.html">Bewegungen</a>
     </nav>
   </header>
+ <div class="dashboard-filters">
+    <label>Von:</label>
+    <input type="date" id="filter-from">
+
+    <label>Bis:</label>
+    <input type="date" id="filter-to">
+
+    <label>Lagerort:</label>
+    <select id="filter-lagerort">
+        <option value="">Alle</option>
+    </select>
+
+    <label>Produkt:</label>
+    <select id="filter-produkt">
+        <option value="">Alle</option>
+    </select>
+
+    <button id="filter-apply">Filter anwenden</button>
+</div>
+
 <div class="dashboard-grid">
 
     <!-- KPI Lagerwert -->
