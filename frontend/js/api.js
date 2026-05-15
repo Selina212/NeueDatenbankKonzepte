@@ -117,6 +117,12 @@ function deleteLagerbewegung(id) {
   return request(`/lagerbewegungen/${id}`, { method: 'DELETE' })
 }
 
+function createLagerbewegung(data) {
+  return request('/lagerbewegungen', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  })
+}
 
 
 function getLagerbewegungen() {
