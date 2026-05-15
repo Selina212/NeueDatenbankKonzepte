@@ -12,7 +12,8 @@ const lagerbewegungSchema = new mongoose.Schema({
   },
   menge: {
     type: Number,
-    required: true
+    required: true,
+     min: [1, 'Menge muss mindestens 1 sein']
   },
   grund: String,
   produkt_id: {

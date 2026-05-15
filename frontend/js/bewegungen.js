@@ -90,8 +90,8 @@ async function ladeBewegungen() {
         <td>${wert(lagerort.bezeichnung || '–')}</td>
         <td>
           <div class="aktionen">
-            <button data-action="edit">Bearbeiten</button>
-            <button data-action="delete">Löschen</button>
+            <button class="btn-bearbeiten" data-action="edit">Bearbeiten</button>
+            <button class="btn-loeschen"data-action="delete">Löschen</button>
           </div>
         </td>
       </tr>
@@ -129,8 +129,8 @@ function inlineEdit(row) {
     </td>
 
     <td>
-      <button data-action="save">Speichern</button>
-      <button data-action="cancel">Abbrechen</button>
+      <button class="btn-anlegen" data-action="save">Speichern</button>
+      <button class="btn-loeschen" data-action="cancel">Abbrechen</button>
     </td>
   `
 

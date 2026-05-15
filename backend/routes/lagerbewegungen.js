@@ -95,7 +95,7 @@ router.get('/:id/kette', async (req, res) => {
     res.status(400).json({ error: '4er-Kette konnte nicht geladen werden', details: err.message });
   }
 });
-
+//Author: Selina Steuer
 /* ============================================================
    POST: Bewegung anlegen (atomar, mit Mongoose Transaction)
    ============================================================ */
@@ -170,6 +170,67 @@ router.post('/', async (req, res) => {
     if (session) session.endSession();
   }
 });
+/* ============================================================
+   PUT: Bewegung aktualisieren
+   ============================================================ */
+router.put('/:id', async (req, res) => {
+  try {
+    const { datum, typ, menge, grund, produkt_id, lagerort_id } = req.body;
 
+    // Validierung
+    if (!datum || !typ || !menge || !produkt_id || !lagerort_id) {
+      return res.status(400).json({ error: 'Ungültige Eingabedaten' });
+    }
+
+    if (!['Eingang', 'Ausgang'].includes(typ)) {
+      return res.status(400).json({ error: 'Typ muss Eingang oder Ausgang sein' });
+    }
+
+    if (menge <= 0) {
+      return res.status(400).json({ error: 'Menge muss größer als 0 sein' });
+    }
+
+    // Update durchführen
+    const updated = await Lagerbewegung.findByIdAndUpdate(
+      req.params.id,
+      { datum, typ, menge, grund, produkt_id, lagerort_id },
+      { new: true, runValidators: true }
+    )
+      .populate({
+        path: 'produkt_id',
+        model: Produkt,
+        populate: { path: 'lieferant_id', model: Lieferant }
+      })
+      .populate({
+        path: 'lagerort_id',
+        model: Lagerort
+      });
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* ============================================================
+   DELETE: Bewegung löschen
+   ============================================================ */
+router.delete('/:id', async (req, res) => {
+  try {
+    const deleted = await Lagerbewegung.findByIdAndDelete(req.params.id);
+
+    if (!deleted) {
+      return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
+    }
+
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 module.exports = router;

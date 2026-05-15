@@ -107,6 +107,17 @@ function updateProdukt(id, data) {
 function deleteProdukt(id) {
   return request(`/produkte/${id}`, { method: 'DELETE' })
 }
+function updateLagerbewegung(id, data) {
+  return request(`/lagerbewegungen/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  })
+}
+function deleteLagerbewegung(id) {
+  return request(`/lagerbewegungen/${id}`, { method: 'DELETE' })
+}
+
+
 
 function getLagerbewegungen() {
   return request('/lagerbewegungen')
