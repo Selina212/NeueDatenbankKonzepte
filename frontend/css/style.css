@@ -97,8 +97,8 @@ main {
 
 table {
   border-collapse: collapse;
-  width: 100%;
-  min-width: 760px;
+  width: auto;
+
 }
 
 th,
@@ -264,6 +264,7 @@ table, th, td {
 th, td {
     padding: 10px;
 }
+/* Author: Selina Steuer */
 .dashboard-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));

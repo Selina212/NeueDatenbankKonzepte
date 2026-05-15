@@ -60,18 +60,33 @@ router.get('/pro-lagerort', async (req, res) => {
   try {
     const result = await Lagerbewegung.aggregate([
       {
+        $addFields: {
+          lagerort_id_obj: { $toObjectId: "$lagerort_id" }
+        }
+      },
+      {
+        $group: {
+          _id: "$lagerort_id_obj",
+          anzahl: { $sum: 1 }
+        }
+      },
+      {
         $lookup: {
           from: "lagerorte",
-          localField: "lagerort_id",
+          localField: "_id",
           foreignField: "_id",
           as: "lagerort"
         }
       },
-      { $unwind: "$lagerort" },
       {
-        $group: {
-          _id: "$lagerort.bezeichnung",
-          anzahl: { $sum: 1 }
+        $project: {
+          anzahl: 1,
+          bezeichnung: {
+            $ifNull: [
+              { $arrayElemAt: ["$lagerort.bezeichnung", 0] },
+              "Unbekannt"
+            ]
+          }
         }
       },
       { $sort: { anzahl: -1 } }
@@ -82,6 +97,8 @@ router.get('/pro-lagerort', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
 
 /* ============================================================
    4) Gesamtwert des Lagers

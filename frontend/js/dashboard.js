@@ -53,10 +53,10 @@ async function loadProdukteProKategorie() {
 
     const data = res.data ?? res;
     populateTable('#kategorien-table tbody', data, row => {
-      return `<td>${escapeHtml(row._id ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
+      return `<td>${escapeHtml(row.bezeichnung ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
     });
 
-    const labels = data.map(r => r._id ?? 'Unbekannt');
+    const labels = data.map(r => r.bezeichnung ?? 'Unbekannt');
     const values = data.map(r => r.anzahl ?? 0);
     renderPie('chartProdukteProKategorie', labels, values);
   } catch (err) {
@@ -72,10 +72,10 @@ async function loadBewegungenProLagerort() {
 
     const data = res.data ?? res;
     populateTable('#lagerort-table tbody', data, row => {
-      return `<td>${escapeHtml(row._id ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
+      return `<td>${escapeHtml(row.bezeichnung ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
     });
 
-    const labels = data.map(r => r._id ?? 'Unbekannt');
+    const labels = data.map(r => r.bezeichnung ?? 'Unbekannt');
     const values = data.map(r => r.anzahl ?? 0);
     renderBar('chartBewegungenProLagerort', labels, values, 'Bewegungen');
   } catch (err) {
