@@ -15,7 +15,55 @@ const Kategorie = require('../models/Kategorie');
    ============================================================ */
 router.get('/pro-tag', async (req, res) => {
   try {
+    const match = {};
+
+    /* -----------------------------------------
+       1) ZEITRAUM-FILTER
+       ----------------------------------------- */
+    if (req.query.from || req.query.to) {
+      match.datum = {};
+
+      if (req.query.from) {
+        match.datum.$gte = new Date(req.query.from);
+      }
+
+      if (req.query.to) {
+        const end = new Date(req.query.to);
+        end.setHours(23, 59, 59, 999);
+        match.datum.$lte = end;
+      }
+    }
+
+    /* -----------------------------------------
+       2) PRODUKT-FILTER
+       ----------------------------------------- */
+    if (req.query.produkt) {
+      match.produkt_id_str = req.query.produkt;
+    }
+
+    /* -----------------------------------------
+       3) LAGERORT-FILTER
+       ----------------------------------------- */
+    if (req.query.lagerort) {
+      match.lagerort_id_str = req.query.lagerort;
+    }
+
+    /* -----------------------------------------
+       4) AGGREGATION
+       ----------------------------------------- */
     const result = await Lagerbewegung.aggregate([
+      // IDs in Strings umwandeln (wegen Mischung!)
+      {
+        $addFields: {
+          produkt_id_str: { $toString: "$produkt_id" },
+          lagerort_id_str: { $toString: "$lagerort_id" }
+        }
+      },
+
+      // Filter anwenden
+      { $match: match },
+
+      // Gruppieren pro Tag
       {
         $group: {
           _id: {
@@ -24,14 +72,19 @@ router.get('/pro-tag', async (req, res) => {
           anzahl: { $sum: 1 }
         }
       },
+
+      // Sortieren nach Datum
       { $sort: { _id: 1 } }
     ]);
 
     res.json(result);
+
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 /* ============================================================
    2) Anzahl Zugänge vs. Abgänge
@@ -64,7 +117,7 @@ router.get('/pro-lagerort', async (req, res) => {
     // -----------------------------
     const match = {};
 
-    // Zeitraum
+// Zeitraum
 if (req.query.from || req.query.to) {
   match.datum = {};
 
@@ -79,66 +132,68 @@ if (req.query.from || req.query.to) {
   }
 }
 
-    // Lagerort
-    if (req.query.lagerort) {
-      match.lagerort_id = req.query.lagerort; // String → wird später gecastet
-    }
-
-    // Produkt
-    if (req.query.produkt) {
-  match.$expr = {
-    $eq: [
-      { $toString: "$produkt_id" },
-      req.query.produkt
-    ]
-  };
+// Produkt
+if (req.query.produkt) {
+  match.produkt_id_str = req.query.produkt;
 }
 
+// Lagerort
+if (req.query.lagerort) {
+  match.lagerort_id_str = req.query.lagerort;
+}
 
-    const result = await Lagerbewegung.aggregate([
-      // FILTER anwenden
-      { $match: match },
+const result = await Lagerbewegung.aggregate([
+  // IDs in Strings umwandeln
+  {
+    $addFields: {
+      produkt_id_str: { $toString: "$produkt_id" },
+      lagerort_id_str: { $toString: "$lagerort_id" }
+    }
+  },
 
-      // String → ObjectId casten
-      {
-        $addFields: {
-          lagerort_id_obj: { $toObjectId: "$lagerort_id" }
-        }
-      },
+  // Filter anwenden
+  { $match: match },
 
-      // Gruppieren
-      {
-        $group: {
-          _id: "$lagerort_id_obj",
-          anzahl: { $sum: 1 }
-        }
-      },
+  // ObjectId für Lookup
+  {
+    $addFields: {
+      lagerort_id_obj: { $toObjectId: "$lagerort_id" }
+    }
+  },
 
-      // Lookup auf DEINE Collection "lagerorte"
-      {
-        $lookup: {
-          from: "lagerorte",
-          localField: "_id",
-          foreignField: "_id",
-          as: "lagerort"
-        }
-      },
+  // Gruppieren
+  {
+    $group: {
+      _id: "$lagerort_id_obj",
+      anzahl: { $sum: 1 }
+    }
+  },
 
-      // Bezeichnung extrahieren
-      {
-        $project: {
-          anzahl: 1,
-          bezeichnung: {
-            $ifNull: [
-              { $arrayElemAt: ["$lagerort.bezeichnung", 0] },
-              "Unbekannt"
-            ]
-          }
-        }
-      },
+  // Lookup
+  {
+    $lookup: {
+      from: "lagerorte",
+      localField: "_id",
+      foreignField: "_id",
+      as: "lagerort"
+    }
+  },
 
-      { $sort: { anzahl: -1 } }
-    ]);
+  {
+    $project: {
+      anzahl: 1,
+      bezeichnung: {
+        $ifNull: [
+          { $arrayElemAt: ["$lagerort.bezeichnung", 0] },
+          "Unbekannt"
+        ]
+      }
+    }
+  },
+
+  { $sort: { anzahl: -1 } }
+]);
+
 
     res.json(result);
 
@@ -201,5 +256,6 @@ router.get('/produkte-pro-kategorie', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 module.exports = router;
