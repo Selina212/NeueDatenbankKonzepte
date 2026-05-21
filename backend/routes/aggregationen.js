@@ -65,11 +65,19 @@ router.get('/pro-lagerort', async (req, res) => {
     const match = {};
 
     // Zeitraum
-    if (req.query.from || req.query.to) {
-      match.datum = {};
-      if (req.query.from) match.datum.$gte = new Date(req.query.from);
-      if (req.query.to) match.datum.$lte = new Date(req.query.to);
-    }
+if (req.query.from || req.query.to) {
+  match.datum = {};
+
+  if (req.query.from) {
+    match.datum.$gte = new Date(req.query.from);
+  }
+
+  if (req.query.to) {
+    const end = new Date(req.query.to);
+    end.setHours(23, 59, 59, 999);
+    match.datum.$lte = end;
+  }
+}
 
     // Lagerort
     if (req.query.lagerort) {
@@ -78,8 +86,14 @@ router.get('/pro-lagerort', async (req, res) => {
 
     // Produkt
     if (req.query.produkt) {
-      match.produkt_id = req.query.produkt;
-    }
+  match.$expr = {
+    $eq: [
+      { $toString: "$produkt_id" },
+      req.query.produkt
+    ]
+  };
+}
+
 
     const result = await Lagerbewegung.aggregate([
       // FILTER anwenden
