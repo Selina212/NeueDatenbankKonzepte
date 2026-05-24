@@ -3,6 +3,7 @@ const Lieferant = require('../models/Lieferant')
 
 const router = express.Router()
 
+// Lieferanten sind eigene Dokumente und können später Produkten zugeordnet werden.
 router.get('/', async (req, res) => {
   try {
     const lieferanten = await Lieferant.find()
@@ -37,6 +38,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    // runValidators prüft auch beim Bearbeiten die Regeln aus dem Schema.
     const lieferant = await Lieferant.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true

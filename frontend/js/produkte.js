@@ -28,6 +28,7 @@ function euro(value) {
 }
 
 async function pruefe(result) {
+  // Bei Fehlern bleibt die Seite offen und zeigt nur die Meldung an.
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -37,6 +38,7 @@ async function pruefe(result) {
 }
 
 function nameAusListe(liste, id) {
+  // Produkte speichern nur IDs, angezeigt werden aber die Namen aus den geladenen Listen.
   const eintrag = liste.find(item => item._id === id)
   return eintrag ? eintrag.name : ''
 }
@@ -52,6 +54,7 @@ function fuelleDropdown(select, daten, platzhalter) {
 }
 
 async function ladeAuswahlDaten() {
+  // Kategorien und Lieferanten werden zuerst geladen, damit die Produktformulare Auswahlfelder haben.
   kategorien = await pruefe(await getKategorien()) || []
   lieferanten = await pruefe(await getLieferanten()) || []
   fuelleDropdown(document.querySelector('#kategorie-id'), kategorien, 'Keine Kategorie')
@@ -60,7 +63,8 @@ async function ladeAuswahlDaten() {
 
 async function ladeProdukte() {
   const q = suche.value.trim()
-  produkte = await pruefe(q ? await sucheProdukte(q) : await getProdukte()) || []
+  // Mit Suchtext wird die Suchroute genutzt, sonst die normale Produktliste.
+  produkte = q ? (((await pruefe(await sucheProdukte(q))) || {}).daten || []) : (await pruefe(await getProdukte()) || [])
   renderProdukte()
 }
 
@@ -73,6 +77,7 @@ function renderProdukte() {
   }
 
   produkte.forEach(produkt => {
+    // Kritische Produkte werden markiert, wenn der Bestand unter dem Mindestbestand liegt.
     const kritisch = Number(produkt.bestand || 0) < Number(produkt.mindestbestand || 0)
     body.insertAdjacentHTML('beforeend', `
       <tr data-id="${produkt._id}" class="${kritisch ? 'kritisch' : ''}">
@@ -105,6 +110,7 @@ function optionen(daten, aktivId, platzhalter) {
 }
 
 function datenAusZeile(row) {
+  // Die Werte aus der bearbeiteten Tabellenzeile werden wieder zu einem Produktobjekt.
   return {
     artikelnummer: row.querySelector('[name="artikelnummer"]').value,
     bezeichnung: row.querySelector('[name="bezeichnung"]').value,
@@ -121,6 +127,7 @@ function datenAusZeile(row) {
 function inlineEdit(row) {
   const produkt = produkte.find(item => item._id === row.dataset.id)
 
+  // Die Tabellenzeile wird zum kleinen Bearbeitungsformular.
   row.innerHTML = `
     <td><input name="artikelnummer" required value="${wert(produkt.artikelnummer)}"></td>
     <td>
@@ -143,6 +150,7 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
+  // Je nach gedrücktem Button wird bearbeitet, gespeichert oder gelöscht.
   const action = event.target.dataset.action
   if (!action) return
 
@@ -166,6 +174,7 @@ body.addEventListener('click', async event => {
 document.querySelector('#produkt-form').addEventListener('submit', async event => {
   event.preventDefault()
   const form = event.currentTarget
+  // Leere Auswahlfelder werden nicht gesendet, damit keine leeren IDs gespeichert werden.
   const data = {
     artikelnummer: form.elements.artikelnummer.value,
     bezeichnung: form.elements.bezeichnung.value,

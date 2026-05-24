@@ -16,6 +16,7 @@ function wert(value) {
 }
 
 async function pruefe(result) {
+  // Die API-Funktionen geben immer ok:true oder ok:false zurück.
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -35,6 +36,7 @@ async function ladeKategorien() {
   }
 
   kategorien.forEach(kategorie => {
+    // Die Tabelle wird aus den geladenen Dokumenten neu aufgebaut.
     body.insertAdjacentHTML('beforeend', `
       <tr data-id="${kategorie._id}">
         <td>${wert(kategorie.name)}</td>
@@ -54,6 +56,7 @@ function inlineEdit(row) {
   const name = row.children[0].textContent
   const beschreibung = row.children[1].textContent
 
+  // Die Anzeigezeile wird kurzzeitig durch Eingabefelder ersetzt.
   row.innerHTML = `
     <td><input name="name" required value="${name}"></td>
     <td><textarea name="beschreibung">${beschreibung}</textarea></td>
@@ -67,6 +70,7 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
+  // Alle Tabellenbuttons werden über einen gemeinsamen Klick-Handler behandelt.
   const action = event.target.dataset.action
   if (!action) return
 
@@ -94,6 +98,7 @@ body.addEventListener('click', async event => {
 document.querySelector('#kategorie-form').addEventListener('submit', async event => {
   event.preventDefault()
   const form = event.currentTarget
+  // Die Formulardaten entsprechen direkt den Feldern im Kategorie-Dokument.
   const data = {
     name: form.elements.name.value,
     beschreibung: form.elements.beschreibung.value

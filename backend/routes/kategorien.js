@@ -3,6 +3,7 @@ const Kategorie = require('../models/Kategorie')
 
 const router = express.Router()
 
+// Einfache CRUD-Routen für die Kategorien-Collection.
 router.get('/', async (req, res) => {
   try {
     const kategorien = await Kategorie.find()
@@ -37,6 +38,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
+    // new:true gibt direkt die geänderte Version zurück.
     const kategorie = await Kategorie.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true

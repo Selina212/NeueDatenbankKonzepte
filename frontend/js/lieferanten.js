@@ -17,6 +17,7 @@ function wert(value) {
 }
 
 async function pruefe(result) {
+  // Fehler aus der API werden direkt oberhalb der Tabelle angezeigt.
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -26,6 +27,7 @@ async function pruefe(result) {
 }
 
 function datenAusZeile(row) {
+  // Kontakt und Adresse werden wieder als verschachtelte Objekte an das Backend geschickt.
   return {
     name: row.querySelector('[name="name"]').value,
     kontakt: {
@@ -52,6 +54,7 @@ async function ladeLieferanten() {
   }
 
   lieferanten.forEach(lieferant => {
+    // Falls Kontakt oder Adresse fehlen, bleibt die Tabelle trotzdem lesbar.
     const kontakt = lieferant.kontakt || {}
     const adresse = lieferant.adresse || {}
 
@@ -78,6 +81,7 @@ function inlineEdit(row) {
   const kontakt = lieferant.kontakt || {}
   const adresse = lieferant.adresse || {}
 
+  // Beim Bearbeiten bleiben Kontakt und Adresse zusammen in einer Zeile.
   row.innerHTML = `
     <td><input name="name" required value="${wert(lieferant.name)}"></td>
     <td>
@@ -101,6 +105,7 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
+  // Bearbeiten, Speichern und Löschen laufen über die Buttons in der Tabelle.
   const action = event.target.dataset.action
   if (!action) return
 
