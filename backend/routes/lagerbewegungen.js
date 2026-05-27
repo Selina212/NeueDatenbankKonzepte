@@ -4,43 +4,55 @@ const mongoose = require('mongoose');
 
 const Lagerbewegung = require('../models/Lagerbewegung');
 const Lieferant = require('../models/Lieferant');
-const Produkt = require('../models/Produkt');
 const Lagerort = require('../models/Lagerort');
 
 const router = express.Router();
 
 /* ============================================================
-   GET: Bewegungen (mit Produkt + Lieferant)
+   Native Produkte-Collection
+   ============================================================ */
+function produkteCollection() {
+  return mongoose.connection.db.collection("produkte");
+}
+
+/* ============================================================
+   Hilfsfunktion: Produkt + Lieferant laden
+   ============================================================ */
+async function produktMitLieferant(produktId) {
+  const produkt = await produkteCollection().findOne({ _id: new mongoose.Types.ObjectId(produktId) });
+  if (!produkt) return null;
+
+  let lieferant = null;
+  if (produkt.lieferant_id) {
+    lieferant = await Lieferant.findById(produkt.lieferant_id);
+  }
+
+  return { produkt, lieferant };
+}
+
+/* ============================================================
+   GET: Alle Bewegungen (mit Produkt + Lieferant + Lagerort)
    ============================================================ */
 router.get('/', async (req, res) => {
   try {
-    const lagerbewegungen = await Lagerbewegung.find()
-      .populate({
-        path: 'produkt_id',
-        model: Produkt,
-        populate: { path: 'lieferant_id', model: Lieferant }
-      })
-      .populate({
-        path: 'lagerort_id',
-        model: Lagerort
-      });
+    const bewegungen = await Lagerbewegung.find().lean();
 
-    const daten = lagerbewegungen.map(bewegung => {
-      const produkt = bewegung.produkt_id;
-      const lieferant = produkt?.lieferant_id || null;
-      const lagerort = bewegung.lagerort_id;
+    const daten = [];
+    for (const b of bewegungen) {
+      const { produkt, lieferant } = await produktMitLieferant(b.produkt_id);
+      const lagerort = await Lagerort.findById(b.lagerort_id);
 
-      return {
-        _id: bewegung._id,
-        datum: bewegung.datum,
-        typ: bewegung.typ,
-        menge: bewegung.menge,
-        grund: bewegung.grund,
+      daten.push({
+        _id: b._id,
+        datum: b.datum,
+        typ: b.typ,
+        menge: b.menge,
+        grund: b.grund,
         produkt,
         lieferant,
         lagerort
-      };
-    });
+      });
+    }
 
     res.json(daten);
   } catch (err) {
@@ -48,72 +60,54 @@ router.get('/', async (req, res) => {
   }
 });
 
-
 /* ============================================================
    GET: Einzelne Bewegung
    ============================================================ */
 router.get('/:id', async (req, res) => {
   try {
-    const bewegung = await Lagerbewegung.findById(req.params.id)
-      .populate({ path: 'produkt_id', model: Produkt });
+    const b = await Lagerbewegung.findById(req.params.id).lean();
+    if (!b) return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
 
-    if (!bewegung) return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
+    const { produkt, lieferant } = await produktMitLieferant(b.produkt_id);
+    const lagerort = await Lagerort.findById(b.lagerort_id);
 
-    res.json(bewegung);
+    res.json({ ...b, produkt, lieferant, lagerort });
   } catch (err) {
     res.status(400).json({ error: 'Lagerbewegung konnte nicht geladen werden', details: err.message });
   }
 });
 
 /* ============================================================
-   GET: 4er-Kette (Bewegung → Produkt → Lieferant → Kontakt)
+   GET: 4er-Kette
    ============================================================ */
 router.get('/:id/kette', async (req, res) => {
   try {
-    const bewegung = await Lagerbewegung.findById(req.params.id)
-      .populate({
-        path: 'produkt_id',
-        model: Produkt,
-        populate: { path: 'lieferant_id', model: Lieferant }
-      });
+    const b = await Lagerbewegung.findById(req.params.id).lean();
+    if (!b) return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
 
-    if (!bewegung) return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
+    const { produkt, lieferant } = await produktMitLieferant(b.produkt_id);
 
     res.json({
-      bewegung: {
-        _id: bewegung._id,
-        datum: bewegung.datum,
-        typ: bewegung.typ,
-        menge: bewegung.menge,
-        grund: bewegung.grund
-      },
-      produkt: bewegung.produkt_id,
-      lieferant: bewegung.produkt_id?.lieferant_id || null,
-      kontakt: bewegung.produkt_id?.lieferant_id?.kontakt || null
+      bewegung: b,
+      produkt,
+      lieferant,
+      kontakt: lieferant?.kontakt || null
     });
   } catch (err) {
     res.status(400).json({ error: '4er-Kette konnte nicht geladen werden', details: err.message });
   }
 });
-//Author: Selina Steuer
+
 /* ============================================================
-   POST: Bewegung anlegen (atomar, mit Mongoose Transaction)
+   POST: Bewegung anlegen (mit Transaktion)
    ============================================================ */
 router.post('/', async (req, res) => {
   let session = null;
   try {
-    // parse & validate
-    const produkt_id = req.body.produkt_id;
-    const lagerort_id = req.body.lagerort_id;
-    const typ = req.body.typ;
-    const grund = req.body.grund || '';
-    const menge = Number(req.body.menge);
+    const { produkt_id, lagerort_id, typ, grund, menge } = req.body;
 
-    if (!produkt_id || !lagerort_id || !typ || !Number.isFinite(menge) || menge <= 0) {
+    if (!produkt_id || !lagerort_id || !typ || !menge) {
       return res.status(400).json({ error: 'Ungültige Eingabedaten' });
-    }
-    if (!['Eingang', 'Ausgang'].includes(typ)) {
-      return res.status(400).json({ error: 'Typ muss "Eingang" oder "Ausgang" sein' });
     }
 
     session = await mongoose.startSession();
@@ -121,28 +115,26 @@ router.post('/', async (req, res) => {
     let createdMovement = null;
 
     await session.withTransaction(async () => {
-      // Prüfe Lagerort
       const lagerort = await Lagerort.findById(lagerort_id).session(session);
       if (!lagerort) throw { status: 400, message: 'Lagerort existiert nicht' };
 
-      // Lade Produkt
-      const produkt = await Produkt.findById(produkt_id).session(session);
+      const produkt = await produkteCollection().findOne({ _id: new mongoose.Types.ObjectId(produkt_id) });
       if (!produkt) throw { status: 400, message: 'Produkt existiert nicht' };
 
-      // Bestand prüfen
       if (typ === 'Ausgang' && produkt.bestand < menge) {
         throw { status: 400, message: 'Nicht genug Bestand' };
       }
 
-      // Neuer Bestand berechnen und setzen (runValidators)
-      const neuerBestand = typ === 'Eingang' ? produkt.bestand + menge : produkt.bestand - menge;
-      await Produkt.findByIdAndUpdate(
-        produkt_id,
+      const neuerBestand = typ === 'Eingang'
+        ? produkt.bestand + menge
+        : produkt.bestand - menge;
+
+      await produkteCollection().updateOne(
+        { _id: new mongoose.Types.ObjectId(produkt_id) },
         { $set: { bestand: neuerBestand } },
-        { session, runValidators: true }
+        { session }
       );
 
-      // Bewegung anlegen
       const [bewegung] = await Lagerbewegung.create([{
         typ,
         menge,
@@ -155,21 +147,23 @@ router.post('/', async (req, res) => {
       createdMovement = bewegung;
     });
 
-    // populated Antwort zurückgeben (außerhalb der Session)
-    const populated = await Lagerbewegung.findById(createdMovement._id)
-      .populate({ path: 'produkt_id', model: Produkt, populate: { path: 'lieferant_id', model: Lieferant } })
-      .populate({ path: 'lagerort_id', model: Lagerort });
+    const { produkt, lieferant } = await produktMitLieferant(createdMovement.produkt_id);
+    const lagerort = await Lagerort.findById(createdMovement.lagerort_id);
 
-    res.status(201).json(populated);
+    res.status(201).json({
+      ...createdMovement.toObject(),
+      produkt,
+      lieferant,
+      lagerort
+    });
+
   } catch (err) {
-    if (err && err.status && err.message) {
-      return res.status(err.status).json({ error: err.message });
-    }
-    res.status(500).json({ error: err.message || 'Interner Serverfehler' });
+    res.status(err.status || 500).json({ error: err.message || 'Interner Serverfehler' });
   } finally {
     if (session) session.endSession();
   }
 });
+
 /* ============================================================
    PUT: Bewegung aktualisieren
    ============================================================ */
@@ -177,40 +171,21 @@ router.put('/:id', async (req, res) => {
   try {
     const { datum, typ, menge, grund, produkt_id, lagerort_id } = req.body;
 
-    // Validierung
-    if (!datum || !typ || !menge || !produkt_id || !lagerort_id) {
-      return res.status(400).json({ error: 'Ungültige Eingabedaten' });
-    }
-
-    if (!['Eingang', 'Ausgang'].includes(typ)) {
-      return res.status(400).json({ error: 'Typ muss Eingang oder Ausgang sein' });
-    }
-
-    if (menge <= 0) {
-      return res.status(400).json({ error: 'Menge muss größer als 0 sein' });
-    }
-
-    // Update durchführen
     const updated = await Lagerbewegung.findByIdAndUpdate(
       req.params.id,
       { datum, typ, menge, grund, produkt_id, lagerort_id },
       { new: true, runValidators: true }
-    )
-      .populate({
-        path: 'produkt_id',
-        model: Produkt,
-        populate: { path: 'lieferant_id', model: Lieferant }
-      })
-      .populate({
-        path: 'lagerort_id',
-        model: Lagerort
-      });
+    ).lean();
 
     if (!updated) {
       return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
     }
 
-    res.json(updated);
+    const { produkt, lieferant } = await produktMitLieferant(updated.produkt_id);
+    const lagerort = await Lagerort.findById(updated.lagerort_id);
+
+    res.json({ ...updated, produkt, lieferant, lagerort });
+
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -222,11 +197,9 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await Lagerbewegung.findByIdAndDelete(req.params.id);
-
     if (!deleted) {
       return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
     }
-
     res.json({ ok: true });
   } catch (err) {
     res.status(500).json({ error: err.message });
