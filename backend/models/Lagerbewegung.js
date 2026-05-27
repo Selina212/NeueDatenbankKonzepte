@@ -1,3 +1,4 @@
+//Author Raphael Falk
 const mongoose = require('mongoose')
 
 const lagerbewegungSchema = new mongoose.Schema({

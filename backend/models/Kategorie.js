@@ -1,3 +1,4 @@
+//Author Raphael Falk
 const mongoose = require('mongoose')
 
 // Kategorien sind eigene Dokumente, weil mehrere Produkte dieselbe Kategorie nutzen können.

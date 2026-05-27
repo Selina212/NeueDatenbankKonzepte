@@ -1,3 +1,4 @@
+//Author Raphael Falk
 const body = document.querySelector('#produkte-body')
 const meldung = document.querySelector('#meldung')
 const suche = document.querySelector('#suche')

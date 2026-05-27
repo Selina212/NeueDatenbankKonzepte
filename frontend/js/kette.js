@@ -1,3 +1,4 @@
+//Author: Raphael Falk
 const body = document.querySelector('#kette-body')
 const meldung = document.querySelector('#meldung')
 

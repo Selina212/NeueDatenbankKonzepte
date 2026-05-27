@@ -1,4 +1,4 @@
-// Author: Selina Steuer
+//Author: Raphael Falk
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -97,34 +97,34 @@ router.get('/:id/kette', async (req, res) => {
     res.status(400).json({ error: '4er-Kette konnte nicht geladen werden', details: err.message });
   }
 });
+//Author: Selina Steuer
 
-/* ============================================================
-   POST: Bewegung anlegen (mit Transaktion)
-   ============================================================ */
+//POST: Bewegung anlegen (mit Transaktion)
 router.post('/', async (req, res) => {
   let session = null;
   try {
     const { produkt_id, lagerort_id, typ, grund, menge } = req.body;
-
+//Eingaben prüfen
     if (!produkt_id || !lagerort_id || !typ || !menge) {
       return res.status(400).json({ error: 'Ungültige Eingabedaten' });
     }
-
+//Transaktion starten
     session = await mongoose.startSession();
 
     let createdMovement = null;
 
     await session.withTransaction(async () => {
+      //Lagerort prüfen
       const lagerort = await Lagerort.findById(lagerort_id).session(session);
       if (!lagerort) throw { status: 400, message: 'Lagerort existiert nicht' };
-
+//Produkt prüfen
       const produkt = await produkteCollection().findOne({ _id: new mongoose.Types.ObjectId(produkt_id) });
       if (!produkt) throw { status: 400, message: 'Produkt existiert nicht' };
-
+//Bestand prüfen
       if (typ === 'Ausgang' && produkt.bestand < menge) {
         throw { status: 400, message: 'Nicht genug Bestand' };
       }
-
+//Bestand aktualisieren
       const neuerBestand = typ === 'Eingang'
         ? produkt.bestand + menge
         : produkt.bestand - menge;
@@ -134,7 +134,8 @@ router.post('/', async (req, res) => {
         { $set: { bestand: neuerBestand } },
         { session }
       );
-
+      
+      //Bewegung anlegen
       const [bewegung] = await Lagerbewegung.create([{
         typ,
         menge,
@@ -164,9 +165,8 @@ router.post('/', async (req, res) => {
   }
 });
 
-/* ============================================================
-   PUT: Bewegung aktualisieren
-   ============================================================ */
+//PUT: Bewegung aktualisieren
+
 router.put('/:id', async (req, res) => {
   try {
     const { datum, typ, menge, grund, produkt_id, lagerort_id } = req.body;
@@ -180,7 +180,7 @@ router.put('/:id', async (req, res) => {
     if (!updated) {
       return res.status(404).json({ error: 'Lagerbewegung nicht gefunden' });
     }
-
+//Produkt, Lieferant und Lagerort für die Antwort laden
     const { produkt, lieferant } = await produktMitLieferant(updated.produkt_id);
     const lagerort = await Lagerort.findById(updated.lagerort_id);
 
@@ -191,9 +191,7 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-/* ============================================================
-   DELETE: Bewegung löschen
-   ============================================================ */
+//DELETE: Bewegung löschen
 router.delete('/:id', async (req, res) => {
   try {
     const deleted = await Lagerbewegung.findByIdAndDelete(req.params.id);

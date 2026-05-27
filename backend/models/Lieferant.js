@@ -1,3 +1,4 @@
+//Author Raphael Falk
 const mongoose = require('mongoose')
 
 // Kontakt und Adresse liegen direkt im Lieferanten, weil sie zu genau diesem Lieferanten gehören.

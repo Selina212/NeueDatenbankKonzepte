@@ -1,3 +1,4 @@
+//Author: Raphael Falk
 const BASE_URL = 'http://localhost:3000/api'
 
 async function request(path, options = {}) {
@@ -107,6 +108,7 @@ function updateProdukt(id, data) {
 function deleteProdukt(id) {
   return request(`/produkte/${id}`, { method: 'DELETE' })
 }
+//Author: Selina Steuer
 function updateLagerbewegung(id, data) {
   return request(`/lagerbewegungen/${id}`, {
     method: 'PUT',

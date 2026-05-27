@@ -1,3 +1,4 @@
+//Author: Selina Steuer
 const body = document.querySelector('#lagerorte-body')
 const meldung = document.querySelector('#meldung')
 let lagerorte = []

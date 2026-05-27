@@ -1,9 +1,11 @@
-const body = document.querySelector('#bewegungen-body')
-const meldung = document.querySelector('#meldung')
-let bewegungen = []
+//Author: Selina Steuer
+// DOM-Elemente aus dem HTML holen
+const body = document.querySelector('#bewegungen-body')   // Tabelle, in die alle Bewegungen eingetragen werden
+const meldung = document.querySelector('#meldung')        // Bereich für Fehlermeldungen
+let bewegungen = []                                       // Array zum Zwischenspeichern aller Bewegungen
 async function ladeProduktDropdown() {
-  const result = await getProdukte()
-  const produkte = await pruefe(result) || []
+    const result = await getProdukte()          // API-Aufruf an /api/produkte
+  const produkte = await pruefe(result) || [] // Fehler prüfen + Daten extrahieren
 
   const select = document.querySelector('#produkt_id')
   select.innerHTML = '<option value="">Bitte wählen…</option>'
@@ -31,7 +33,7 @@ async function ladeLagerortDropdown() {
 }
 
 
-
+//Fehlermeldungen anzeigen und löschen
 function zeigeFehler(text) {
   meldung.textContent = text
   meldung.className = 'meldung fehler'
@@ -41,11 +43,11 @@ function leereFehler() {
   meldung.textContent = ''
   meldung.className = 'meldung'
 }
-
+//Hilfsfunktion: Werte sicher ausgeben, damit die Seite nicht "undefined" oder "null" anzeigt, sondern einfach leer bleibt.
 function wert(v) {
   return v ?? ''
 }
-
+//API-Antwort prüfen
 async function pruefe(result) {
   if (!result.ok) {
     zeigeFehler(result.error)
@@ -54,7 +56,7 @@ async function pruefe(result) {
   leereFehler()
   return result.data
 }
-
+//Daten aus Tabellenzeile lesen
 function datenAusZeile(row) {
   return {
     datum: row.querySelector('[name="datum"]').value,
@@ -65,7 +67,7 @@ function datenAusZeile(row) {
     lagerort_id: row.querySelector('[name="lagerort_id"]').value
   }
 }
-
+//alle Bewegungen laden und in die Tabelle eintragen
 async function ladeBewegungen() {
   bewegungen = await pruefe(await getLagerbewegungen()) || []
   body.innerHTML = ''
@@ -74,7 +76,7 @@ async function ladeBewegungen() {
     body.innerHTML = '<tr><td class="leer" colspan="7">Keine Bewegungen vorhanden.</td></tr>'
     return
   }
-
+//alle als extra Tabellenzeile
   bewegungen.forEach(b => {
     const produkt = b.produkt || b.produkt_id || {}
     const lieferant = b.lieferant || {}
@@ -98,10 +100,10 @@ async function ladeBewegungen() {
     `)
   })
 }
-
+//Inline-Bearbeitung bei einer Bewegung
 function inlineEdit(row) {
   const b = bewegungen.find(x => x._id === row.dataset.id)
-
+//Zeile in Eingabefelder umwandeln
   row.innerHTML = `
     <td><input name="datum" type="date" value="${wert(b.datum?.substring(0,10))}"></td>
 
@@ -140,7 +142,7 @@ function inlineEdit(row) {
 }
 
 
- 
+ //Produkt-Dropdown für inline-edit
 async function ladeProduktDropdownInline(id, selected) {
   const result = await getProdukte()
   const produkte = await pruefe(result) || []
@@ -157,7 +159,7 @@ async function ladeProduktDropdownInline(id, selected) {
   })
 }
 
-
+//Lagerort-Dropdown für inline-edit
 async function ladeLagerortDropdownInline(id, selected) {
   const result = await getLagerorte()
   const lagerorte = await pruefe(result) || []
@@ -173,7 +175,7 @@ async function ladeLagerortDropdownInline(id, selected) {
     `)
   })
 }
-
+//Event-Handling für alle Buttons in der Tabelle und das Formular zum Anlegen einer neuen Bewegung
 body.addEventListener('click', async event => {
   const action = event.target.dataset.action
   if (!action) return

@@ -1,19 +1,16 @@
-// dashboard.js — Author: Selina Steuer
-// Erwartet: api.js im selben Scope mit Funktionen:
-// getLagerwert(), getProdukteProKategorie(), getBewegungenProLagerort(), getBewegungenProTag()
+// Author: Selina Steuer
 
 /* global Chart */ // Hinweis für Linter
+//Debug-Ausgaben, um sicherzustellen, dass die API-Funktionen verfügbar sind und korrekt antworten
 console.log('api functions:', typeof getLagerwert, typeof getProdukteProKategorie);
 getLagerwert().then(r => console.log('lagerwert response', r)).catch(e => console.error('lagerwert error', e));
 getProdukteProKategorie().then(r => console.log('produkte response', r)).catch(e => console.error('produkte error', e));
-
+//Speicher für Chart-Instanzen, damit sie bei Bedarf zerstört werden können (z.B. vor dem Neuzeichnen)
 const _charts = {};
-
-/**
- * Public entry used in deinem HTML: <script>loadDashboard();</script>
- */
+//Dashboard laden
 async function loadDashboard() {
   try {
+    //mehrere API-Aufrufe parallel, damit die Seite schneller lädt. Sobald alle Daten da sind, werden die entsprechenden Funktionen aufgerufen, um die Tabellen und Charts zu füllen.
     await Promise.all([
       loadLagerwert(),
       loadProdukteProKategorie(),
@@ -22,19 +19,21 @@ async function loadDashboard() {
       loadFilterDropdowns()
 
     ]);
+    //Gesamtanzahl Bewegungen wird separat geladen, da sie nicht direkt von einem eigenen Endpunkt kommt, sondern aus der Summe der Bewegungen pro Tag berechnet wird.
     await loadBewegungenCount();
   } catch (err) {
     console.error('Dashboard laden fehlgeschlagen:', err);
   }
 }
+//Filter-Parameter aus den Eingabefeldern lesen und als Query-String zurückgeben
 function getFilterParams() {
   const params = new URLSearchParams();
-
+//Werte aus den Filterfeldern holen
   const from = document.getElementById("filter-from")?.value;
   const to = document.getElementById("filter-to")?.value;
   const lagerort = document.getElementById("filter-lagerort")?.value;
   const produkt = document.getElementById("filter-produkt")?.value;
-
+//Nur vorhandene Filter anhängen
   if (from) params.append("from", from);
   if (to) params.append("to", to);
   if (lagerort) params.append("lagerort", lagerort);
@@ -42,7 +41,7 @@ function getFilterParams() {
 
   return params.toString();
 }
-
+//Dropdowns für Filter laden
 async function loadFilterDropdowns() {
     // aktuelle Auswahl merken
     const selectedLagerort = document.getElementById("filter-lagerort")?.value || "";
@@ -81,7 +80,7 @@ async function loadFilterDropdowns() {
     lagerortSelect.value = selectedLagerort;
     produktSelect.value = selectedProdukt;
 }
-
+//Filter zurücksetzen und Dashboard neu laden
 function resetFilters() {
   document.getElementById("filter-from").value = "";
   document.getElementById("filter-to").value = "";
@@ -91,7 +90,7 @@ function resetFilters() {
   loadDashboard();
 }
 
-/* ---------------- KPI: Lagerwert ---------------- */
+//KPI: Lagerwert laden
 async function loadLagerwert() {
   try {
     const res = await getLagerwert();
@@ -110,17 +109,18 @@ async function loadLagerwert() {
   }
 }
 
-/* ---------------- Tabellen + Chart: Produkte pro Kategorie ---------------- */
+//Tabellen + Chart: Produkte pro Kategorie
 async function loadProdukteProKategorie() {
   try {
     const res = await getProdukteProKategorie(getFilterParams());
     if (!res.ok) throw new Error(res.error || 'Keine Daten');
 
     const data = res.data ?? res;
+    //Tabelle füllen
     populateTable('#kategorien-table tbody', data, row => {
       return `<td>${escapeHtml(row._id ?? 'Unbekannt')}</td><td>${Number(row.anzahl ?? 0)}</td>`;
     });
-
+//Diagramm rendern
     const labels = data.map(r => r._id ?? 'Unbekannt');
     const values = data.map(r => r.anzahl ?? 0);
     renderPie('chartProdukteProKategorie', labels, values);
@@ -129,7 +129,7 @@ async function loadProdukteProKategorie() {
   }
 }
 
-/* ---------------- Tabellen + Chart: Bewegungen pro Lagerort ---------------- */
+//Tabellen + Chart: Bewegungen pro Lagerort
 async function loadBewegungenProLagerort() {
   try {
     const res = await getBewegungenProLagerort(getFilterParams());
@@ -148,12 +148,12 @@ async function loadBewegungenProLagerort() {
   }
 }
 
-/* ---------------- Chart: Bewegungen pro Tag ---------------- */
+//Chart: Bewegungen pro Tag
 async function loadBewegungenProTag() {
   try {
     const res = await getBewegungenProTag(getFilterParams());
     if (!res.ok) throw new Error(res.error || 'Keine Daten');
-
+//Daten sortieren, damit die Linie im Chart korrekt dargestellt wird (chronologisch)
     const data = (res.data ?? res).slice().sort((a, b) => String(a._id).localeCompare(String(b._id)));
     const labels = data.map(d => d._id);
     const values = data.map(d => d.anzahl ?? 0);
@@ -163,12 +163,13 @@ async function loadBewegungenProTag() {
   }
 }
 
-/* ---------------- KPI: Gesamtanzahl Bewegungen ---------------- */
+//KPI: Gesamtanzahl Bewegungen
 async function loadBewegungenCount() {
   try {
     const res = await getBewegungenProTag(getFilterParams());
     if (!res.ok) return;
     const data = res.data ?? res;
+    //Summe aller Bewegungen über alle Tage berechnen
     const total = (Array.isArray(data) ? data : []).reduce((s, r) => s + (r.anzahl ?? 0), 0);
     const el = document.getElementById('bewegungen-count');
     if (el) el.textContent = total;
@@ -177,7 +178,7 @@ async function loadBewegungenCount() {
   }
 }
 
-/* ---------------- Helpers: Tabelle füllen ---------------- */
+//Helper: Tabelle füllen
 function populateTable(selector, rows, rowRenderer) {
   const tbody = document.querySelector(selector);
   if (!tbody) return;
@@ -189,7 +190,7 @@ function populateTable(selector, rows, rowRenderer) {
   });
 }
 
-/* ---------------- Chart Rendering ---------------- */
+//Chart Rendering
 function renderPie(id, labels, data) {
   destroyChart(id);
   const ctx = getCanvasContext(id);
@@ -222,7 +223,7 @@ function renderLine(id, labels, data, label = '') {
     options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } }
   });
 }
-
+//Chart-Helper: Canvas-Kontext holen und Chart-Instanz zerstören
 function getCanvasContext(id) {
   const el = document.getElementById(id);
   if (!el) {
@@ -239,7 +240,7 @@ function destroyChart(id) {
   }
 }
 
-/* ---------------- Utility ---------------- */
+//Utility Funktionen
 function generateColors(n) {
   const palette = ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc949','#af7aa1','#ff9da7','#9c755f','#bab0ac'];
   return Array.from({ length: n }, (_, i) => palette[i % palette.length]);
@@ -249,6 +250,7 @@ function escapeHtml(str) {
   if (str == null) return '';
   return String(str).replace(/[&<>"']/g, s => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
 }
+//Filter Buttons aktivieren
 document.getElementById("filter-apply").addEventListener("click", loadDashboard);
 document.addEventListener("DOMContentLoaded", () => {
   const applyBtn = document.getElementById("filter-apply");
@@ -265,5 +267,5 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-/* ---------------- Export for older HTML that calls loadDashboard() directly ---------------- */
+//Export for older HTML that calls loadDashboard() directly
 window.loadDashboard = loadDashboard;

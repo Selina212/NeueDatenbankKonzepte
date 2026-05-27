@@ -1,3 +1,4 @@
+//Author: Raphael Falk
 const express = require('express')
 const Kategorie = require('../models/Kategorie')
 

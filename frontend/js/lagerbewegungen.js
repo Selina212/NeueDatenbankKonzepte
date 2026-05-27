@@ -1,3 +1,4 @@
+//Author: Raphael Falk
 const body = document.querySelector('#lagerbewegungen-body')
 const meldung = document.querySelector('#meldung')
 const ketteContainer = document.querySelector('#kette-details')

@@ -34,7 +34,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API-Routen
+// API-Routen einbinden
 app.use('/api/kategorien', require('./routes/kategorien'));
 app.use('/api/lieferanten', require('./routes/lieferanten'));
 app.use('/api/produkte', require('./routes/produkte'));
