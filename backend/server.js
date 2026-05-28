@@ -38,11 +38,10 @@ app.get('/health', (req, res) => {
 app.use('/api/kategorien', require('./routes/kategorien'));
 app.use('/api/lieferanten', require('./routes/lieferanten'));
 app.use('/api/produkte', require('./routes/produkte'));
+app.use('/api/kette', require('./routes/kette'));  
 app.use('/api/lagerorte', require('./routes/lagerorte'));
 app.use('/api/lagerbewegungen', require('./routes/lagerbewegungen'));
 app.use('/api/aggregationen', require('./routes/aggregationen'));
-app.use('/api/kette', require('./routes/kette'));
-
 // Statische Dateien aus dem frontend-Ordner servieren
 // Erwartet: frontend/index.html, frontend/aggregationen.html, frontend/css/style.css, frontend/js/...
 app.use(express.static(path.join(__dirname, '..', 'frontend')));

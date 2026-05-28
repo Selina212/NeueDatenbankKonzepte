@@ -1,4 +1,5 @@
 //Author: Raphael Falk
+// Kategorieseite im Frontend
 const body = document.querySelector('#kategorien-body')
 const meldung = document.querySelector('#meldung')
 
@@ -13,11 +14,12 @@ function leereFehler() {
 }
 
 function wert(value) {
+  // Leere Werte bleiben leer
   return value ?? ''
 }
 
 async function pruefe(result) {
-  // Die API-Funktionen geben immer ok:true oder ok:false zurück.
+  // API-Antwort einheitlich prüfen
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -27,6 +29,7 @@ async function pruefe(result) {
 }
 
 async function ladeKategorien() {
+  // Kategorien laden und Tabelle neu zeichnen
   const kategorien = await pruefe(await getKategorien())
   body.innerHTML = ''
 
@@ -37,7 +40,7 @@ async function ladeKategorien() {
   }
 
   kategorien.forEach(kategorie => {
-    // Die Tabelle wird aus den geladenen Dokumenten neu aufgebaut.
+    // Tabelle aus den geladenen Dokumenten bauen
     body.insertAdjacentHTML('beforeend', `
       <tr data-id="${kategorie._id}">
         <td>${wert(kategorie.name)}</td>
@@ -45,7 +48,7 @@ async function ladeKategorien() {
         <td>
           <div class="aktionen">
             <button class="btn-bearbeiten" type="button" data-action="edit">Bearbeiten</button>
-            <button class="btn-loeschen" type="button" data-action="delete">Loeschen</button>
+            <button class="btn-loeschen" type="button" data-action="delete">Löschen</button>
           </div>
         </td>
       </tr>
@@ -57,7 +60,7 @@ function inlineEdit(row) {
   const name = row.children[0].textContent
   const beschreibung = row.children[1].textContent
 
-  // Die Anzeigezeile wird kurzzeitig durch Eingabefelder ersetzt.
+  // Zeile kurz zum Bearbeiten umwandeln
   row.innerHTML = `
     <td><input name="name" required value="${name}"></td>
     <td><textarea name="beschreibung">${beschreibung}</textarea></td>
@@ -71,7 +74,7 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
-  // Alle Tabellenbuttons werden über einen gemeinsamen Klick-Handler behandelt.
+  // Alle Tabellenbuttons laufen über diesen Handler
   const action = event.target.dataset.action
   if (!action) return
 
@@ -90,7 +93,7 @@ body.addEventListener('click', async event => {
     if (await pruefe(result)) ladeKategorien()
   }
 
-  if (action === 'delete' && confirm('Kategorie wirklich loeschen?')) {
+  if (action === 'delete' && confirm('Kategorie wirklich löschen?')) {
     const result = await deleteKategorie(id)
     if (await pruefe(result)) ladeKategorien()
   }
@@ -99,7 +102,7 @@ body.addEventListener('click', async event => {
 document.querySelector('#kategorie-form').addEventListener('submit', async event => {
   event.preventDefault()
   const form = event.currentTarget
-  // Die Formulardaten entsprechen direkt den Feldern im Kategorie-Dokument.
+  // Formulardaten passen direkt zum Kategorie-Dokument
   const data = {
     name: form.elements.name.value,
     beschreibung: form.elements.beschreibung.value

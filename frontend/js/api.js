@@ -1,8 +1,10 @@
 //Author: Raphael Falk
+// Gemeinsame API-Funktionen für das Frontend
 const BASE_URL = 'http://localhost:3000/api'
 
 async function request(path, options = {}) {
   try {
+    // Alle API-Aufrufe laufen hier durch
     const response = await fetch(`${BASE_URL}${path}`, {
       headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
       ...options
@@ -12,6 +14,7 @@ async function request(path, options = {}) {
     const data = text ? JSON.parse(text) : null
 
     if (!response.ok) {
+      // Backend-Fehler einheitlich weitergeben
       return {
         ok: false,
         error: data?.error || data?.details || `Anfrage fehlgeschlagen (${response.status})`
@@ -28,6 +31,7 @@ async function request(path, options = {}) {
 }
 
 function getKategorien() {
+  // Kategorien
   return request('/kategorien')
 }
 
@@ -54,6 +58,7 @@ function deleteKategorie(id) {
 }
 
 function getLieferanten() {
+  // Lieferanten
   return request('/lieferanten')
 }
 
@@ -80,6 +85,7 @@ function deleteLieferant(id) {
 }
 
 function getProdukte() {
+  // Produkte
   return request('/produkte')
 }
 
@@ -135,9 +141,6 @@ function getLagerbewegungById(id) {
   return request(`/lagerbewegungen/${id}`)
 }
 
-function getLagerbewegungKette(id) {
-  return request(`/lagerbewegungen/${id}/kette`)
-}
 // Aggregationen (hinzufügen in api.js)
 function getLagerwert() {
   return request('/aggregationen/lagerwert');
@@ -182,4 +185,3 @@ function deleteLagerort(id) {
 function getKette() {
   return request('/kette')
 }
-

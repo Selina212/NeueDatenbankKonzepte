@@ -1,7 +1,8 @@
 //Author Raphael Falk
+// Mongoose-Model für Kategorien
 const mongoose = require('mongoose')
 
-// Kategorien sind eigene Dokumente, weil mehrere Produkte dieselbe Kategorie nutzen können.
+// Mehrere Produkte können dieselbe Kategorie nutzen
 const kategorieSchema = new mongoose.Schema({
   name: {
     type: String,

@@ -1,7 +1,8 @@
 //Author Raphael Falk
+// Mongoose-Model für Lieferanten
 const mongoose = require('mongoose')
 
-// Kontakt und Adresse liegen direkt im Lieferanten, weil sie zu genau diesem Lieferanten gehören.
+// Kontakt und Adresse gehören direkt zum Lieferanten
 const lieferantSchema = new mongoose.Schema({
   name: {
     type: String,

@@ -1,5 +1,5 @@
 // Author: Raphael Falk
-// Lädt die 4er-Kette und schreibt sie in die Tabelle
+// Lädt die 4er-Kette in die Tabelle
 
 const body = document.querySelector('#kette-body')
 const meldung = document.querySelector('#meldung')
@@ -21,7 +21,7 @@ function wert(value) {
 function datum(value) {
   if (!value) return ''
 
-  // Datum formatieren
+  // Datum als TT.MM.JJJJ anzeigen
   const date = new Date(value)
   const tag = String(date.getDate()).padStart(2, '0')
   const monat = String(date.getMonth() + 1).padStart(2, '0')
@@ -30,6 +30,7 @@ function datum(value) {
 }
 
 async function pruefe(result) {
+  // Fehler oberhalb der Tabelle anzeigen
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -39,8 +40,9 @@ async function pruefe(result) {
 }
 
 async function ladeKette() {
-  // Liste aus daten
+  // Backend gibt Objekt mit daten zurück
   const antwort = await pruefe(await getKette())
+  // Nur daten ist die Tabelle
   const daten = antwort ? antwort.daten : []
   body.innerHTML = ''
 
@@ -50,7 +52,7 @@ async function ladeKette() {
   }
 
   daten.forEach(eintrag => {
-    // Tabelle füllen
+    // Eine Tabellenzeile pro Ketten-Treffer
     body.insertAdjacentHTML('beforeend', `
       <tr>
         <td>${wert(eintrag.lagerort)}</td>

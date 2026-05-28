@@ -1,4 +1,5 @@
 //Author Raphael Falk
+// Mongoose-Model für Lagerorte
 const mongoose = require('mongoose');
 
 const LagerortSchema = new mongoose.Schema({
@@ -10,4 +11,3 @@ const LagerortSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.model('Lagerort', LagerortSchema, 'lagerorte');
-
