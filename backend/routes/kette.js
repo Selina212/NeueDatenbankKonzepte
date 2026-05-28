@@ -1,17 +1,19 @@
-//Author Raphael Falk
+// Author: Raphael Falk
+// Gibt die 4er-Kette Lagerort, Bewegung, Produkt und Kategorie zurück.
+
 const express = require('express')
 const Lagerort = require('../models/Lagerort')
 
 const router = express.Router()
 
-/* ============================================================
-   GET: 4er-Kette mit einfacher Suche
-   Lagerort -> Lagerbewegung -> Produkt -> Kategorie
-   ============================================================ */
+//GET: 4er-Kette mit einfacher Suche
+//Lagerort -> Lagerbewegung -> PRodukt -> Kategorie
+
 router.get('/kette', async (req, res) => {
   try {
     const q = req.query.q || ''
 
+    // Die Pipeline verbindet die vier Collections Schritt für Schritt.
     const pipeline = [
       // Zum Lagerort werden die passenden Bewegungen gesucht.
       {
@@ -22,6 +24,7 @@ router.get('/kette', async (req, res) => {
           as: 'lagerbewegung'
         }
       },
+      // Nach dem lookup liegt das Ergebnis als Array vor, unwind macht daraus einzelne Zeilen.
       { $unwind: '$lagerbewegung' },
 
       // Zu jeder Bewegung wird das passende Produkt ergänzt.
@@ -33,6 +36,7 @@ router.get('/kette', async (req, res) => {
           as: 'produkt'
         }
       },
+      // Dadurch kann danach direkt mit dem Produkt weitergearbeitet werden.
       { $unwind: '$produkt' },
 
       // Aus dem Produkt kommt dann noch die Kategorie dazu.
@@ -44,6 +48,7 @@ router.get('/kette', async (req, res) => {
           as: 'kategorie'
         }
       },
+      // Am Ende steht pro Treffer genau eine Kombination aus Lagerort, Bewegung, Produkt und Kategorie.
       { $unwind: '$kategorie' }
     ]
 
@@ -62,7 +67,7 @@ router.get('/kette', async (req, res) => {
       })
     }
 
-    // Für die Tabelle werden nur die sichtbaren Felder zurückgegeben.
+    // Für die Tabelle werden nur die sichtbren Felder zurückgegeben.
     pipeline.push(
       {
         $project: {
@@ -85,6 +90,7 @@ router.get('/kette', async (req, res) => {
 
     const kette = await Lagerort.aggregate(pipeline)
 
+    // Die Tabelle im Frontend liest später nur die Liste aus daten aus.
     res.json({
       suche: q || null,
       anzahl: kette.length,
