@@ -1,4 +1,6 @@
-//Author: Raphael Falk
+// Author: Raphael Falk
+// Lädt die 4er-Kette und schreibt sie in die Tabelle
+
 const body = document.querySelector('#kette-body')
 const meldung = document.querySelector('#meldung')
 
@@ -19,7 +21,7 @@ function wert(value) {
 function datum(value) {
   if (!value) return ''
 
-  // Die Anzeige soll wie ein deutsches Datum aussehen, nicht wie ein ISO-String.
+  // Datum formatieren
   const date = new Date(value)
   const tag = String(date.getDate()).padStart(2, '0')
   const monat = String(date.getMonth() + 1).padStart(2, '0')
@@ -37,6 +39,7 @@ async function pruefe(result) {
 }
 
 async function ladeKette() {
+  // Liste aus daten
   const antwort = await pruefe(await getKette())
   const daten = antwort ? antwort.daten : []
   body.innerHTML = ''
@@ -47,7 +50,7 @@ async function ladeKette() {
   }
 
   daten.forEach(eintrag => {
-    // Die API liefert bereits flache Felder, deshalb kann die Tabelle direkt befüllt werden.
+    // Tabelle füllen
     body.insertAdjacentHTML('beforeend', `
       <tr>
         <td>${wert(eintrag.lagerort)}</td>
