@@ -9,7 +9,7 @@ const router = express.Router()
 //GET: 4er-Kette mit einfacher Suche
 //Lagerort -> Lagerbewegung -> PRodukt -> Kategorie
 
-router.get('/kette', async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const q = req.query.q || ''
 

@@ -179,3 +179,7 @@ function updateLagerort(id, data) {
 function deleteLagerort(id) {
   return request(`/lagerorte/${id}`, { method: 'DELETE' });
 }
+function getKette() {
+  return request('/kette')
+}
+
