@@ -1,4 +1,5 @@
 //Author: Raphael Falk
+// Lieferantenseite im Frontend
 const body = document.querySelector('#lieferanten-body')
 const meldung = document.querySelector('#meldung')
 let lieferanten = []
@@ -14,11 +15,12 @@ function leereFehler() {
 }
 
 function wert(value) {
+  // Leere Werte bleiben leer
   return value ?? ''
 }
 
 async function pruefe(result) {
-  // Fehler aus der API werden direkt oberhalb der Tabelle angezeigt.
+  // Fehler oberhalb der Tabelle anzeigen
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -28,15 +30,17 @@ async function pruefe(result) {
 }
 
 function datenAusZeile(row) {
-  // Kontakt und Adresse werden wieder als verschachtelte Objekte an das Backend geschickt.
+  // Kontakt und Adresse wieder verschachteln
   return {
     name: row.querySelector('[name="name"]').value,
+    // Unterdokument Kontakt
     kontakt: {
       vorname: row.querySelector('[name="kontakt.vorname"]').value,
       nachname: row.querySelector('[name="kontakt.nachname"]').value,
       email: row.querySelector('[name="kontakt.email"]').value,
       telefon: row.querySelector('[name="kontakt.telefon"]').value
     },
+    // Unterdokument Adresse
     adresse: {
       stadt: row.querySelector('[name="adresse.stadt"]').value,
       plz: row.querySelector('[name="adresse.plz"]').value,
@@ -46,6 +50,7 @@ function datenAusZeile(row) {
 }
 
 async function ladeLieferanten() {
+  // Lieferanten laden und Tabelle neu zeichnen
   lieferanten = await pruefe(await getLieferanten()) || []
   body.innerHTML = ''
 
@@ -55,7 +60,7 @@ async function ladeLieferanten() {
   }
 
   lieferanten.forEach(lieferant => {
-    // Falls Kontakt oder Adresse fehlen, bleibt die Tabelle trotzdem lesbar.
+    // Fehlende Unterdaten leer anzeigen
     const kontakt = lieferant.kontakt || {}
     const adresse = lieferant.adresse || {}
 
@@ -69,7 +74,7 @@ async function ladeLieferanten() {
         <td>
           <div class="aktionen">
             <button class="btn-bearbeiten" type="button" data-action="edit">Bearbeiten</button>
-            <button class="btn-loeschen" type="button" data-action="delete">Loeschen</button>
+            <button class="btn-loeschen" type="button" data-action="delete">Löschen</button>
           </div>
         </td>
       </tr>
@@ -82,7 +87,7 @@ function inlineEdit(row) {
   const kontakt = lieferant.kontakt || {}
   const adresse = lieferant.adresse || {}
 
-  // Beim Bearbeiten bleiben Kontakt und Adresse zusammen in einer Zeile.
+  // Kontakt und Adresse in einer Zeile bearbeiten
   row.innerHTML = `
     <td><input name="name" required value="${wert(lieferant.name)}"></td>
     <td>
@@ -106,7 +111,7 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
-  // Bearbeiten, Speichern und Löschen laufen über die Buttons in der Tabelle.
+  // Button-Aktion aus der Tabelle auslesen
   const action = event.target.dataset.action
   if (!action) return
 
@@ -121,7 +126,7 @@ body.addEventListener('click', async event => {
     if (await pruefe(result)) ladeLieferanten()
   }
 
-  if (action === 'delete' && confirm('Lieferant wirklich loeschen?')) {
+  if (action === 'delete' && confirm('Lieferant wirklich löschen?')) {
     const result = await deleteLieferant(id)
     if (await pruefe(result)) ladeLieferanten()
   }

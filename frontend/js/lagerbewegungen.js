@@ -1,4 +1,5 @@
 //Author: Raphael Falk
+// Zeigt Lagerbewegungen und Details an
 const body = document.querySelector('#lagerbewegungen-body')
 const meldung = document.querySelector('#meldung')
 const ketteContainer = document.querySelector('#kette-details')
@@ -18,10 +19,12 @@ function wert(value) {
 }
 
 function datum(value) {
+  // Datum lesbar anzeigen
   return value ? new Date(value).toLocaleDateString('de-DE') : ''
 }
 
 async function pruefe(result) {
+  // Fehler direkt auf der Seite anzeigen
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -31,6 +34,7 @@ async function pruefe(result) {
 }
 
 async function ladeLagerbewegungen() {
+  // Bewegungen kommen mit Produktdaten aus dem Backend
   const bewegungen = await pruefe(await getLagerbewegungen()) || []
   body.innerHTML = ''
 
@@ -64,6 +68,7 @@ async function ladeLagerbewegungen() {
 }
 
 async function zeigeKette(id) {
+  // Details erst beim Klick laden
   const kette = await pruefe(await getLagerbewegungKette(id))
   if (!kette) return
 

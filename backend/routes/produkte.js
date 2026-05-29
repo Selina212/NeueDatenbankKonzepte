@@ -1,14 +1,17 @@
 //Author: Raphael Falk
+// API-Routen für Produkte mit nativem MongoDB-Zugriff
 const express = require('express')
 const Produkt = require('../models/Produkt')
 
 const router = express.Router()
 
 function zahlIstUngueltig(value) {
+  // Zahlen dürfen leer sein aber nicht negativ oder ungültig
   return value !== undefined && (Number.isNaN(Number(value)) || Number(value) < 0)
 }
 
 function pruefePflichtfelder(data) {
+  // Diese Felder braucht ein neues Produkt mindestens
   if (!data.artikelnummer || !data.bezeichnung || !data.kategorie_id) {
     return 'Artikelnummer, Bezeichnung und Kategorie sind Pflichtfelder'
   }
@@ -17,7 +20,7 @@ function pruefePflichtfelder(data) {
 }
 
 function pruefeProduktdaten(data, istNeu = false) {
-  // Bei Produkten prüfe ich die wichtigsten Eingaben selbst.
+  // Bei Produkten prüfe ich die wichtigsten Eingaben selbst
   if (istNeu) {
     const pflichtFehler = pruefePflichtfelder(data)
     if (pflichtFehler) return pflichtFehler
@@ -40,6 +43,7 @@ function pruefeProduktdaten(data, istNeu = false) {
 
 router.get('/', async (req, res) => {
   try {
+    // Gibt die normale Produktliste zurück
     const produkte = await Produkt.alleHolen()
     res.json(produkte)
   } catch (err) {
@@ -50,10 +54,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-/* ============================================================
-   GET: Produktsuche
-   Die Filter werden direkt als MongoDB-Filterobjekt gebaut.
-   ============================================================ */
+// Produktsuche mit mehreren möglichen Filtern
 router.get('/suche', async (req, res) => {
   try {
     const q = req.query.q || ''
@@ -62,8 +63,9 @@ router.get('/suche', async (req, res) => {
 
     const filter = {}
 
-    // So findet die Suche auch Teile von Artikelnummer, Name oder Beschreibung.
+    // Suche auch nach Teilen von Artikelnummer Name oder Beschreibung
     if (q.trim() !== '') {
+      // Mehrere Textfelder durchsuchen
       filter.$or = [
         { artikelnummer: { $regex: q, $options: 'i' } },
         { bezeichnung: { $regex: q, $options: 'i' } },
@@ -76,12 +78,13 @@ router.get('/suche', async (req, res) => {
         return res.status(400).json({ error: 'Ungültige Kategorie-ID' })
       }
 
-      // Die Kategorie-ID muss zum Format in der Datenbank passen.
+      // Kategorie-ID passend für MongoDB umwandeln
       filter.kategorie_id = Produkt.objektId(kategorieId)
     }
 
     if (kritisch) {
-      // Damit werden Produkte unter oder am Mindestbestand gefunden.
+      // Bestand und Mindestbestand im selben Dokument vergleichen
+      // Vergleich direkt in MongoDB
       filter.$expr = {
         $lte: ['$bestand', '$mindestbestand']
       }
@@ -90,6 +93,7 @@ router.get('/suche', async (req, res) => {
     const produkte = await Produkt.suchen(filter)
 
     res.json({
+      // Frontend liest die Liste aus daten
       suche: {
         suchbegriff: q || null,
         kategorieId: kategorieId || null,
@@ -108,6 +112,7 @@ router.get('/suche', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    // Erst prüfen dann als ObjectId verwenden
     if (!Produkt.idIstGueltig(req.params.id)) {
       return res.status(400).json({ error: 'Ungültige Produkt-ID' })
     }
@@ -129,6 +134,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    // Beim Anlegen sind Pflichtfelder wichtig
     const fehler = pruefeProduktdaten(req.body, true)
     if (fehler) {
       return res.status(400).json({ error: fehler })
@@ -138,6 +144,7 @@ router.post('/', async (req, res) => {
     res.status(201).json(produkt)
   } catch (err) {
     if (err.code === 11000) {
+      // Artikelnummer schon vorhanden
       return res.status(400).json({
         error: 'Artikelnummer existiert bereits'
       })
@@ -152,6 +159,7 @@ router.post('/', async (req, res) => {
 
 async function produktAendern(req, res) {
   try {
+    // PUT und PATCH nutzen dieselbe Logik
     if (!Produkt.idIstGueltig(req.params.id)) {
       return res.status(400).json({ error: 'Ungültige Produkt-ID' })
     }
@@ -170,6 +178,7 @@ async function produktAendern(req, res) {
     res.json(produkt)
   } catch (err) {
     if (err.code === 11000) {
+      // Artikelnummer schon vorhanden
       return res.status(400).json({
         error: 'Artikelnummer existiert bereits'
       })
@@ -187,6 +196,7 @@ router.patch('/:id', produktAendern)
 
 router.delete('/:id', async (req, res) => {
   try {
+    // Löschen über die ID aus der URL
     if (!Produkt.idIstGueltig(req.params.id)) {
       return res.status(400).json({ error: 'Ungültige Produkt-ID' })
     }

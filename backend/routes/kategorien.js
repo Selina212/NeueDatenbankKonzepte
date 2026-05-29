@@ -1,12 +1,14 @@
 //Author: Raphael Falk
+// API-Routen für Kategorien
 const express = require('express')
 const Kategorie = require('../models/Kategorie')
 
 const router = express.Router()
 
-// Einfache CRUD-Routen für die Kategorien-Collection.
+// Einfache CRUD-Routen für Kategorien
 router.get('/', async (req, res) => {
   try {
+    // Alle Kategorien aus MongoDB lesen
     const kategorien = await Kategorie.find()
     res.json(kategorien)
   } catch (err) {
@@ -16,6 +18,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    // Einzelne Kategorie über die ID suchen
     const kategorie = await Kategorie.findById(req.params.id)
 
     if (!kategorie) {
@@ -30,6 +33,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    // Neues Kategorie-Dokument speichern
     const kategorie = await new Kategorie(req.body).save()
     res.status(201).json(kategorie)
   } catch (err) {
@@ -39,7 +43,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    // new:true gibt direkt die geänderte Version zurück.
+    // new:true gibt direkt die geänderte Version zurück
     const kategorie = await Kategorie.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
@@ -57,15 +61,16 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    // Kategorie löschen und das gelöschte Dokument zurückgeben
     const kategorie = await Kategorie.findByIdAndDelete(req.params.id)
 
     if (!kategorie) {
       return res.status(404).json({ error: 'Kategorie nicht gefunden' })
     }
 
-    res.json({ message: 'Kategorie geloescht', data: kategorie })
+    res.json({ message: 'Kategorie gelöscht', data: kategorie })
   } catch (err) {
-    res.status(400).json({ error: 'Kategorie konnte nicht geloescht werden', details: err.message })
+    res.status(400).json({ error: 'Kategorie konnte nicht gelöscht werden', details: err.message })
   }
 })
 

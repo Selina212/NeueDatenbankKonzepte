@@ -1,4 +1,5 @@
 //Author Raphael Falk
+// Produktseite mit Tabelle Formular und Suche
 const body = document.querySelector('#produkte-body')
 const meldung = document.querySelector('#meldung')
 const suche = document.querySelector('#suche')
@@ -17,19 +18,22 @@ function leereFehler() {
 }
 
 function wert(value) {
+  // Keine undefined Werte in der Tabelle
   return value ?? ''
 }
 
 function zahl(value) {
+  // Zahlen aus dem Formular umwandeln
   return value === '' || value === null ? undefined : Number(value)
 }
 
 function euro(value) {
+  // Preis im deutschen Format anzeigen
   return Number(value || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })
 }
 
 async function pruefe(result) {
-  // Bei Fehlern bleibt die Seite offen und zeigt nur die Meldung an.
+  // Fehler nur als Meldung anzeigen
   if (!result.ok) {
     zeigeFehler(result.error)
     return null
@@ -39,12 +43,13 @@ async function pruefe(result) {
 }
 
 function nameAusListe(liste, id) {
-  // Produkte speichern nur IDs, angezeigt werden aber die Namen aus den geladenen Listen.
+  // IDs aus dem Produkt als Namen anzeigen
   const eintrag = liste.find(item => item._id === id)
   return eintrag ? eintrag.name : ''
 }
 
 function fuelleDropdown(select, daten, platzhalter) {
+  // Dropdown aus geladenen Daten füllen
   select.innerHTML = `<option value="">${platzhalter}</option>`
   daten.forEach(eintrag => {
     const option = document.createElement('option')
@@ -55,7 +60,7 @@ function fuelleDropdown(select, daten, platzhalter) {
 }
 
 async function ladeAuswahlDaten() {
-  // Kategorien und Lieferanten werden zuerst geladen, damit die Produktformulare Auswahlfelder haben.
+  // Kategorien und Lieferanten zuerst für die Auswahlfelder laden
   kategorien = await pruefe(await getKategorien()) || []
   lieferanten = await pruefe(await getLieferanten()) || []
   fuelleDropdown(document.querySelector('#kategorie-id'), kategorien, 'Keine Kategorie')
@@ -64,7 +69,8 @@ async function ladeAuswahlDaten() {
 
 async function ladeProdukte() {
   const q = suche.value.trim()
-  // Mit Suchtext wird die Suchroute genutzt, sonst die normale Produktliste.
+  // Mit Suchtext die Suchroute nutzen
+  // Suche liefert Objekt mit daten
   produkte = q ? (((await pruefe(await sucheProdukte(q))) || {}).daten || []) : (await pruefe(await getProdukte()) || [])
   renderProdukte()
 }
@@ -78,7 +84,7 @@ function renderProdukte() {
   }
 
   produkte.forEach(produkt => {
-    // Kritische Produkte werden markiert, wenn der Bestand unter dem Mindestbestand liegt.
+    // Mindestbestand optisch markieren
     const kritisch = Number(produkt.bestand || 0) < Number(produkt.mindestbestand || 0)
     body.insertAdjacentHTML('beforeend', `
       <tr data-id="${produkt._id}" class="${kritisch ? 'kritisch' : ''}">
@@ -93,7 +99,7 @@ function renderProdukte() {
         <td>
           <div class="aktionen">
             <button class="btn-bearbeiten" type="button" data-action="edit">Bearbeiten</button>
-            <button class="btn-loeschen" type="button" data-action="delete">Loeschen</button>
+            <button class="btn-loeschen" type="button" data-action="delete">Löschen</button>
           </div>
         </td>
       </tr>
@@ -102,8 +108,10 @@ function renderProdukte() {
 }
 
 function optionen(daten, aktivId, platzhalter) {
+  // Optionen für die Bearbeiten-Zeile bauen
   const optionenHtml = [`<option value="">${platzhalter}</option>`]
   daten.forEach(eintrag => {
+    // Aktuelle Auswahl markieren
     const selected = eintrag._id === aktivId ? 'selected' : ''
     optionenHtml.push(`<option value="${eintrag._id}" ${selected}>${eintrag.name}</option>`)
   })
@@ -111,7 +119,7 @@ function optionen(daten, aktivId, platzhalter) {
 }
 
 function datenAusZeile(row) {
-  // Die Werte aus der bearbeiteten Tabellenzeile werden wieder zu einem Produktobjekt.
+  // Werte aus der Tabellenzeile einsammeln
   return {
     artikelnummer: row.querySelector('[name="artikelnummer"]').value,
     bezeichnung: row.querySelector('[name="bezeichnung"]').value,
@@ -128,7 +136,7 @@ function datenAusZeile(row) {
 function inlineEdit(row) {
   const produkt = produkte.find(item => item._id === row.dataset.id)
 
-  // Die Tabellenzeile wird zum kleinen Bearbeitungsformular.
+  // Tabellenzeile wird zum Bearbeiten-Formular
   row.innerHTML = `
     <td><input name="artikelnummer" required value="${wert(produkt.artikelnummer)}"></td>
     <td>
@@ -151,11 +159,12 @@ function inlineEdit(row) {
 }
 
 body.addEventListener('click', async event => {
-  // Je nach gedrücktem Button wird bearbeitet, gespeichert oder gelöscht.
+  // Button-Aktion aus der Tabelle auslesen
   const action = event.target.dataset.action
   if (!action) return
 
   const row = event.target.closest('tr')
+  // ID steckt an der Tabellenzeile
   const id = row.dataset.id
 
   if (action === 'edit') inlineEdit(row)
@@ -166,7 +175,7 @@ body.addEventListener('click', async event => {
     if (await pruefe(result)) ladeProdukte()
   }
 
-  if (action === 'delete' && confirm('Produkt wirklich loeschen?')) {
+  if (action === 'delete' && confirm('Produkt wirklich löschen?')) {
     const result = await deleteProdukt(id)
     if (await pruefe(result)) ladeProdukte()
   }
@@ -175,7 +184,8 @@ body.addEventListener('click', async event => {
 document.querySelector('#produkt-form').addEventListener('submit', async event => {
   event.preventDefault()
   const form = event.currentTarget
-  // Leere Auswahlfelder werden nicht gesendet, damit keine leeren IDs gespeichert werden.
+
+  // Leere IDs nicht ans Backend senden
   const data = {
     artikelnummer: form.elements.artikelnummer.value,
     bezeichnung: form.elements.bezeichnung.value,

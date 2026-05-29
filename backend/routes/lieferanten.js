@@ -1,12 +1,14 @@
 //Author Raphael Falk
+// API-Routen für Lieferanten
 const express = require('express')
 const Lieferant = require('../models/Lieferant')
 
 const router = express.Router()
 
-// Lieferanten sind eigene Dokumente und können später Produkten zugeordnet werden.
+// Lieferanten sind eigene Dokumente und können Produkten zugeordnet werden
 router.get('/', async (req, res) => {
   try {
+    // Alle Lieferanten aus MongoDB lesen
     const lieferanten = await Lieferant.find()
     res.json(lieferanten)
   } catch (err) {
@@ -16,6 +18,7 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    // Einzelnen Lieferanten über die ID suchen
     const lieferant = await Lieferant.findById(req.params.id)
 
     if (!lieferant) {
@@ -30,6 +33,7 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
+    // Neues Lieferanten-Dokument speichern
     const lieferant = await new Lieferant(req.body).save()
     res.status(201).json(lieferant)
   } catch (err) {
@@ -39,7 +43,7 @@ router.post('/', async (req, res) => {
 
 router.put('/:id', async (req, res) => {
   try {
-    // runValidators prüft auch beim Bearbeiten die Regeln aus dem Schema.
+    // runValidators prüft auch beim Bearbeiten die Schema-Regeln
     const lieferant = await Lieferant.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
@@ -57,15 +61,16 @@ router.put('/:id', async (req, res) => {
 
 router.delete('/:id', async (req, res) => {
   try {
+    // Lieferant löschen und das gelöschte Dokument zurückgeben
     const lieferant = await Lieferant.findByIdAndDelete(req.params.id)
 
     if (!lieferant) {
       return res.status(404).json({ error: 'Lieferant nicht gefunden' })
     }
 
-    res.json({ message: 'Lieferant geloescht', data: lieferant })
+    res.json({ message: 'Lieferant gelöscht', data: lieferant })
   } catch (err) {
-    res.status(400).json({ error: 'Lieferant konnte nicht geloescht werden', details: err.message })
+    res.status(400).json({ error: 'Lieferant konnte nicht gelöscht werden', details: err.message })
   }
 })
 

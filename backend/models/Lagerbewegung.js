@@ -1,4 +1,5 @@
 //Author Raphael Falk
+// Mongoose-Model für einzelne Lagerbewegungen
 const mongoose = require('mongoose')
 
 const lagerbewegungSchema = new mongoose.Schema({

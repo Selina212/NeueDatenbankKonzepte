@@ -1,21 +1,22 @@
 // Author: Raphael Falk
-// Gibt die 4er-Kette Lagerort, Bewegung, Produkt und Kategorie zurück.
+// Gibt die 4er-Kette Lagerort Bewegung Produkt und Kategorie zurück
 
 const express = require('express')
 const Lagerort = require('../models/Lagerort')
 
 const router = express.Router()
 
-//GET: 4er-Kette mit einfacher Suche
-//Lagerort -> Lagerbewegung -> PRodukt -> Kategorie
+// GET: 4er-Kette mit einfacher Suche
+// Lagerort -> Lagerbewegung -> Produkt -> Kategorie
 
 router.get('/', async (req, res) => {
   try {
     const q = req.query.q || ''
 
-    // Die Pipeline verbindet die vier Collections Schritt für Schritt.
+    // Die Pipeline verbindet die vier Collections Schritt für Schritt
     const pipeline = [
-      // Zum Lagerort werden die passenden Bewegungen gesucht.
+      // Reverse-Lookup vom Lagerort zu den Bewegungen
+      // Lagerort hat keine Bewegungsliste gespeichert
       {
         $lookup: {
           from: 'lagerbewegungen',
@@ -24,10 +25,10 @@ router.get('/', async (req, res) => {
           as: 'lagerbewegung'
         }
       },
-      // Nach dem lookup liegt das Ergebnis als Array vor, unwind macht daraus einzelne Zeilen.
+      // Aus dem Array wird eine Zeile pro Bewegung
       { $unwind: '$lagerbewegung' },
 
-      // Zu jeder Bewegung wird das passende Produkt ergänzt.
+      // Von der Bewegung geht es weiter zum Produkt
       {
         $lookup: {
           from: 'produkte',
@@ -36,10 +37,10 @@ router.get('/', async (req, res) => {
           as: 'produkt'
         }
       },
-      // Dadurch kann danach direkt mit dem Produkt weitergearbeitet werden.
+      // Produkt liegt danach direkt als Objekt vor
       { $unwind: '$produkt' },
 
-      // Aus dem Produkt kommt dann noch die Kategorie dazu.
+      // Kategorie kommt über das Produkt dazu
       {
         $lookup: {
           from: 'kategorien',
@@ -48,13 +49,14 @@ router.get('/', async (req, res) => {
           as: 'kategorie'
         }
       },
-      // Am Ende steht pro Treffer genau eine Kombination aus Lagerort, Bewegung, Produkt und Kategorie.
+      // Am Ende steht eine Zeile pro kompletter Kette
       { $unwind: '$kategorie' }
     ]
 
-    // Hier kann auch nach Produkt oder Kategorie gesucht werden.
+    // Suche innerhalb der Kette
     if (q.trim() !== '') {
       pipeline.push({
+        // Suche nach sichtbaren Feldern
         $match: {
           $or: [
             { bezeichnung: { $regex: q, $options: 'i' } },
@@ -67,9 +69,10 @@ router.get('/', async (req, res) => {
       })
     }
 
-    // Für die Tabelle werden nur die sichtbren Felder zurückgegeben.
+    // Nur die Felder für die Tabelle zurückgeben
     pipeline.push(
       {
+        // Ausgabe für die Tabelle formen
         $project: {
           _id: 0,
           lagerort: '$bezeichnung',
@@ -90,7 +93,7 @@ router.get('/', async (req, res) => {
 
     const kette = await Lagerort.aggregate(pipeline)
 
-    // Die Tabelle im Frontend liest später nur die Liste aus daten aus.
+    // Die Liste steckt im Feld daten
     res.json({
       suche: q || null,
       anzahl: kette.length,
