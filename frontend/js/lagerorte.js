@@ -1,4 +1,5 @@
 //Author: Selina Steuer
+// Diese Datei enthält die Logik für die Lagerorte: Alle API-Aufrufe, das Laden der Lagerorte in die Tabelle, die Inline-Bearbeitung und das Anlegen neuer Lagerorte.
 const body = document.querySelector('#lagerorte-body')
 const meldung = document.querySelector('#meldung')
 let lagerorte = []

@@ -107,7 +107,7 @@ router.get('/pro-lagerort', async (req, res) => {
         }
       },
       {
-        //Gruppieren nach LAgerort
+        //Gruppieren nach Lagerort
         $group: {
           _id: "$lagerort_id_obj",
           anzahl: { $sum: 1 }
@@ -187,7 +187,7 @@ router.get('/produkte-pro-kategorie', async (req, res) => {
             as: "kategorie"
           }
         },
-        //Katgoie Array auflösen
+        //Kategorie Array auflösen
         { $unwind: "$kategorie" },
         {
           //Gruppieren nach Kategoriename

@@ -1,3 +1,5 @@
+//Author: Raphael Falk und Selina Steuer
+// Hauptserver-Datei: Verbindet mit MongoDB, definiert Middleware, bindet API-Routen ein und startet den Server.
 // server.js
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const path = require('path');

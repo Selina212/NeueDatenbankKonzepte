@@ -1,4 +1,5 @@
 //Author: Selina Steuer
+//API-Endpunkte für Lagerorte (CRUD)
 const express = require('express');
 const router = express.Router();
 const Lagerort = require('../models/Lagerort');

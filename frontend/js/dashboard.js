@@ -1,5 +1,5 @@
 // Author: Selina Steuer
-
+// Diese Datei enthält die Logik für das Dashboard: Alle API-Aufrufe, das Laden der KPIs, Tabellen und Charts sowie die Filterfunktionalität.
 /* global Chart */ // Hinweis für Linter
 //Debug-Ausgaben, um sicherzustellen, dass die API-Funktionen verfügbar sind und korrekt antworten
 console.log('api functions:', typeof getLagerwert, typeof getProdukteProKategorie);

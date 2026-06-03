@@ -1,4 +1,5 @@
 //Author: Selina Steuer
+// Diese Datei enthält die Logik für die Lagerbewegungen: Alle API-Aufrufe, das Laden der Bewegungen in die Tabelle, die Inline-Bearbeitung und das Anlegen neuer Bewegungen.
 // DOM-Elemente aus dem HTML holen
 const body = document.querySelector('#bewegungen-body')   // Tabelle, in die alle Bewegungen eingetragen werden
 const meldung = document.querySelector('#meldung')        // Bereich für Fehlermeldungen
